@@ -46,6 +46,54 @@ const WIN_CONDITION = {
 };
 
 /* ===============================
+   WEIGHTED CAUSAL MATRIX
+   (source affects target by weight)
+================================*/
+
+const CAUSAL_MATRIX = {
+  employment: { economy: 0.4, publicHappiness: 0.25, governmentBudget: 0.15 },
+  economy: { employment: 0.35, governmentBudget: 0.5, publicHappiness: 0.2 },
+  publicHappiness: { economy: 0.15, employment: 0.1, inequality: -0.2 },
+  inequality: { publicHappiness: -0.6, economy: -0.25, employment: -0.15 },
+  governmentBudget: { economy: 0.3, employment: 0.2, publicHappiness: 0.1 }
+};
+
+/* ===============================
+   STOCHASTIC EVENTS (random shocks)
+================================*/
+
+const STOCHASTIC_EVENTS = [
+  { name: "Market correction", impacts: { economy: -8, governmentBudget: -3 }, prob: 0.12 },
+  { name: "Consumer confidence boost", impacts: { economy: 6, publicHappiness: 4 }, prob: 0.15 },
+  { name: "Tech sector hiring wave", impacts: { employment: 5, economy: 4 }, prob: 0.12 },
+  { name: "Fiscal windfall", impacts: { governmentBudget: 6, economy: 2 }, prob: 0.1 },
+  { name: "Social unrest", impacts: { publicHappiness: -6, inequality: 5 }, prob: 0.1 },
+  { name: "Labor strike", impacts: { employment: -5, economy: -4 }, prob: 0.08 },
+  { name: "Policy uncertainty", impacts: { economy: -4, publicHappiness: -3 }, prob: 0.12 },
+  { name: "Green investment surge", impacts: { employment: 3, economy: 3, publicHappiness: 2 }, prob: 0.1 },
+  { name: "Wealth concentration spike", impacts: { inequality: 8, publicHappiness: -5 }, prob: 0.08 },
+  { name: "Budget austerity pressure", impacts: { governmentBudget: -5, publicHappiness: -4 }, prob: 0.08 },
+  { name: "Skills mismatch", impacts: { employment: -4, inequality: 3 }, prob: 0.08 },
+  { name: "Export boom", impacts: { economy: 5, employment: 3 }, prob: 0.1 }
+];
+
+function rollStochasticEvent(turn) {
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const ev of STOCHASTIC_EVENTS) {
+    cumulative += ev.prob;
+    if (roll < cumulative) {
+      const impacts = {};
+      METRIC_KEYS.forEach(k => {
+        impacts[k] = clampImpact(ev.impacts[k] ?? 0);
+      });
+      return { name: ev.name, impacts };
+    }
+  }
+  return null;
+}
+
+/* ===============================
    HELPERS
 ================================*/
 
@@ -79,6 +127,48 @@ function normalizeImpacts(impacts) {
   return impacts;
 }
 
+/**
+ * Apply policy impacts with weighted causal propagation.
+ * Direct impacts → propagate through CAUSAL_MATRIX → add stochastic shock.
+ */
+function applyPolicyWithCausalMatrix(metrics, rawImpacts, turn) {
+  const m = { ...metrics };
+  METRIC_KEYS.forEach(k => {
+    m[k] = Math.max(0, Math.min(100, (m[k] ?? 50) + (rawImpacts[k] ?? 0)));
+  });
+
+  // Propagate through causal matrix (one pass of secondary effects)
+  const deltas = {};
+  METRIC_KEYS.forEach(src => {
+    const change = (rawImpacts[src] ?? 0);
+    if (Math.abs(change) < 0.5) return;
+    const targets = CAUSAL_MATRIX[src];
+    if (!targets) return;
+    for (const [tgt, weight] of Object.entries(targets)) {
+      deltas[tgt] = (deltas[tgt] ?? 0) + change * weight;
+    }
+  });
+  METRIC_KEYS.forEach(k => {
+    const d = Math.round(deltas[k] ?? 0);
+    if (d !== 0) m[k] = Math.max(0, Math.min(100, m[k] + d));
+  });
+
+  // Stochastic event (random shock)
+  const event = turn > 0 ? rollStochasticEvent(turn) : null;
+  if (event) {
+    METRIC_KEYS.forEach(k => {
+      m[k] = Math.max(0, Math.min(100, m[k] + (event.impacts[k] ?? 0)));
+    });
+  }
+
+  // Small entropy (1–2 pt noise)
+  METRIC_KEYS.forEach(k => {
+    m[k] = Math.max(0, Math.min(100, m[k] + (Math.floor(Math.random() * 3) - 1)));
+  });
+
+  return { metrics: m, stochasticEvent: event };
+}
+
 /* ===============================
    PROGRESS + DIFFICULTY
 ================================*/
@@ -99,6 +189,37 @@ function difficultyRule(turn) {
   if (turn <= 7)
     return `Generate 3 positive and 1 risky intervention.`;
   return `Generate stabilization-focused interventions helping achieve victory. Avoid systemic shocks.`;
+}
+
+/* ===============================
+   FEEDBACK LEARNING FROM PAST TURNS
+================================*/
+
+function buildFeedbackContext(decisionHistory) {
+  if (!decisionHistory?.length) return "";
+
+  const entries = decisionHistory.slice(-5).map((d, i) => {
+    const before = d.metricsBefore || {};
+    const after = d.metricsAfter || {};
+    const deltas = {};
+    METRIC_KEYS.forEach(k => {
+      const b = before[k] ?? 0;
+      const a = after[k] ?? 0;
+      if (b !== a) deltas[k] = a - b;
+    });
+    const deltaStr = Object.entries(deltas)
+      .filter(([, v]) => v !== 0)
+      .map(([k, v]) => `${k}: ${v > 0 ? "+" : ""}${v}`)
+      .join(", ");
+    return `  ${i + 1}. "${d.title}" (risk: ${d.riskLevel}) → ${deltaStr || "no change"}`;
+  });
+
+  return `
+FEEDBACK FROM PAST TURNS (learn from these outcomes):
+${entries.join("\n")}
+
+Use this feedback to improve realism: favor interventions that historically moved metrics toward victory, avoid patterns that worsened inequality or happiness. Weight causal chains: employment→economy (+0.4), inequality→happiness (-0.6), etc.
+`;
 }
 
 /* ===============================
@@ -165,8 +286,49 @@ function generatePerformance(metrics, history) {
 }
 
 /* ===============================
-   API ROUTE
+   API ROUTES
 ================================*/
+
+/**
+ * Apply policy with weighted causal matrix + stochastic events.
+ * Returns new metrics and optional stochastic event.
+ */
+app.post('/api/apply-policy', (req, res) => {
+  try {
+    const { metrics, policy, turn = 1 } = req.body;
+    if (!metrics || !policy?.impacts)
+      return res.status(400).json({ error: "Missing metrics or policy.impacts" });
+
+    const { metrics: newMetrics, stochasticEvent } = applyPolicyWithCausalMatrix(
+      metrics,
+      policy.impacts,
+      turn
+    );
+
+    const vals = Object.values(newMetrics);
+    let status = "playing";
+    if (vals.filter((v) => v < 20).length >= 2) status = "lost";
+    else if (
+      newMetrics.employment >= WIN_CONDITION.employment &&
+      newMetrics.economy >= WIN_CONDITION.economy &&
+      newMetrics.publicHappiness >= WIN_CONDITION.publicHappiness &&
+      newMetrics.inequality <= WIN_CONDITION.inequality &&
+      newMetrics.governmentBudget >= WIN_CONDITION.governmentBudget
+    )
+      status = "won";
+
+    res.json({
+      metrics: newMetrics,
+      status,
+      stochasticEvent: stochasticEvent
+        ? { name: stochasticEvent.name, impacts: stochasticEvent.impacts }
+        : null,
+    });
+  } catch (err) {
+    console.error("❌ apply-policy ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post('/api/generate-interventions', async (req, res) => {
 
@@ -236,6 +398,7 @@ ${chosenPolicy?.description}
 
 Recent Decisions:
 ${historyText}
+${buildFeedbackContext(decisionHistory)}
 
 Turn ${turn}/10
 
@@ -250,25 +413,60 @@ ${progressText}
 
 ${difficultyRule(turn)}
 
-Return EXACTLY 4 interventions.
-Use ONLY allowed metrics.
-Impact range -30 to +30.
-Return ONLY JSON ARRAY.
+Return EXACTLY 4 interventions as a JSON array.
+Each intervention MUST have:
+- title: A short, descriptive name (e.g. "Universal Basic Income Expansion", "AI Corporate Tax Levy")
+- description: 1-2 sentences explaining the intervention's context, rationale, and expected effects
+- impacts: object with keys employment, economy, publicHappiness, inequality, governmentBudget (values -30 to +30)
+- riskLevel: "Low", "Medium", or "High"
+
+Use ONLY allowed metrics. Impact range -30 to +30.
+Return ONLY a JSON array, no other text.
 `;
 
-    const completion =
-      await groq.chat.completions.create({
+    const explanationPrompt = chosenPolicy?.title
+      ? `
+You are a Predictive Engine analyzing governance decisions. The user just selected this intervention:
+
+"${chosenPolicy.title}"
+${chosenPolicy.description ? `\n${chosenPolicy.description}` : ""}
+
+Current state: Employment ${metrics.employment}, Economy ${metrics.economy}, Happiness ${metrics.publicHappiness}, Inequality ${metrics.inequality}, Budget ${metrics.governmentBudget}.
+Turn ${turn}/10
+
+Recent decisions: ${historyText || "None"}
+
+Provide a brief 1-2 sentence explanation of what this decision implies: the strategic rationale, trade-offs, and what it signals about the user's governance approach. Be analytical and concise.
+`
+      : null;
+
+    const [completion, explanationCompletion] = await Promise.all([
+      groq.chat.completions.create({
         model: 'llama-3.1-8b-instant',
         temperature: 0.65,
         messages: [
           {
             role: "system",
             content:
-              "Return valid JSON array only."
+              "Return valid JSON array only. Each object must have title, description, impacts, riskLevel."
           },
           { role: "user", content: prompt }
         ]
-      });
+      }),
+      explanationPrompt
+        ? groq.chat.completions.create({
+            model: 'llama-3.1-8b-instant',
+            temperature: 0.5,
+            messages: [
+              {
+                role: "system",
+                content: "Provide a brief analytical explanation."
+              },
+              { role: "user", content: explanationPrompt }
+            ]
+          })
+        : Promise.resolve(null)
+    ]);
 
     let raw =
       completion.choices?.[0]?.message
@@ -301,21 +499,20 @@ Return ONLY JSON ARRAY.
         impacts =
           normalizeImpacts(impacts);
 
+        const title = (p?.title || "").trim() || `Intervention ${i + 1}`;
+        const description = (p?.description || "").trim() || `Context-aware policy option based on current turn ${turn} state.`;
+
         return {
           id:
-            slugify(
-              p.title || `policy_${i}`
-            ) +
+            slugify(title)
+            +
             "_" +
             Date.now() +
             "_" + i,
 
-          title:
-            p.title ||
-            `Intervention ${i + 1}`,
+          title,
 
-          description:
-            p.description || "",
+          description,
 
           impacts,
 
@@ -327,7 +524,10 @@ Return ONLY JSON ARRAY.
         };
       });
 
-    res.json({ interventions });
+    const decisionExplanation =
+      explanationCompletion?.choices?.[0]?.message?.content?.trim() || null;
+
+    res.json({ interventions, decisionExplanation });
 
   } catch (err) {
 
