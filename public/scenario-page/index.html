@@ -1,0 +1,3742 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Governance Control — Blueprint City (Full)</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-deep: #0a0a0f;
+        --bg-panel: #111118;
+        --bg-card: rgba(17, 17, 28, 0.9);
+        --border: rgba(139, 92, 246, 0.12);
+        --border-hl: rgba(139, 92, 246, 0.35);
+        --border-glow: rgba(139, 92, 246, 0.4);
+        --text-pri: #e5e7eb;
+        --text-sec: #9ca3af;
+        --accent: #8b5cf6;
+        --accent-bright: #a855f7;
+        --purple-dim: #6d28d9;
+        --blue: #3b82f6;
+        --cyan: #22d3ee;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --glow-purple: rgba(139, 92, 246, 0.25);
+        --glow-blue: rgba(59, 130, 246, 0.2);
+
+        --font-ui: "Inter", sans-serif;
+        --font-display: "Space Grotesk", "Inter", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+
+      body {
+        background: var(--bg-deep);
+        color: var(--text-pri);
+        font-family: var(--font-ui);
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── LAYOUT ─────────────────────────────── */
+      #app {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      #top-row {
+        display: flex;
+        height: 85vh;
+        min-height: 600px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #city-container {
+        width: 75%;
+        position: relative;
+        background: #0a0a0f;
+      }
+      #city-container canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      #ai-panel {
+        width: 25%;
+        background: var(--bg-panel);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+
+      #bottom-row {
+        display: flex;
+        padding-bottom: 60px;
+        background: var(--bg-deep);
+      }
+
+      #policies-panel {
+        width: 65%;
+        padding: 40px 30px;
+        border-right: 1px solid var(--border);
+      }
+
+      #metrics-panel {
+        width: 35%;
+        padding: 40px 30px;
+        display: flex;
+        flex-direction: column;
+        background: rgba(17, 17, 28, 0.5);
+      }
+
+      /* ── SCROLLBARS ── */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-deep);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--purple-dim);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent);
+      }
+
+      /* ── TYPOGRAPHY & HEADERS ── */
+      .section-header {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .font-display {
+        font-family: var(--font-display);
+      }
+      .gradient-text {
+        background: linear-gradient(
+          135deg,
+          #a855f7 0%,
+          #8b5cf6 40%,
+          #3b82f6 80%,
+          #22d3ee 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      /* ── AI ANALYSIS MACHINE ── */
+      .ai-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(17, 17, 28, 0.6);
+        border-left: 1px solid var(--border);
+      }
+      .ai-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        border: 1px solid var(--border-glow);
+        box-shadow: 0 0 12px var(--glow-purple);
+      }
+      .ai-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+      }
+      .ai-subtitle {
+        font-size: 10px;
+        color: var(--text-sec);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-family: var(--font-mono);
+      }
+
+      #ai-feed {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .log-entry {
+        background: rgba(17, 17, 28, 0.8);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 13px;
+        line-height: 1.7;
+        border-left: 4px solid var(--accent);
+        animation: slide-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .log-turn {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-sec);
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      .log-entry.system {
+        border-left-color: var(--warning);
+      }
+      .log-entry.analysis {
+        border-left-color: var(--accent);
+        background: rgba(139, 92, 246, 0.08);
+      }
+      .log-entry.success {
+        border-left-color: var(--success);
+      }
+      .log-entry.failure {
+        border-left-color: var(--danger);
+        background: rgba(239, 68, 68, 0.08);
+      }
+
+      @keyframes slide-in {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* ── STATUS BAR ── */
+      #status-bar {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        background: rgba(17, 17, 28, 0.9);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-glow);
+        border-radius: 14px;
+        padding: 14px 28px;
+        display: flex;
+        gap: 40px;
+        z-index: 10;
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.6),
+          0 0 12px var(--glow-purple);
+      }
+      .status-item {
+        display: flex;
+        flex-direction: column;
+      }
+      .status-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-sec);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .status-val {
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 22px;
+        font-variant-numeric: tabular-nums;
+      }
+      .status-val.turn {
+        color: var(--accent);
+      }
+
+      /* ── SCENARIOS / POLICIES ── */
+      #policies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+      }
+
+      .policy-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .policy-card:hover:not(.disabled) {
+        border-color: var(--border-glow);
+        transform: translateY(-5px);
+        box-shadow:
+          0 12px 30px rgba(139, 92, 246, 0.2),
+          0 0 16px var(--glow-purple);
+        background: rgba(17, 17, 28, 1);
+      }
+      .policy-card.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        filter: grayscale(1);
+      }
+
+      .policy-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
+      .policy-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 16px;
+        width: 75%;
+        line-height: 1.4;
+        color: var(--text-pri);
+      }
+      .policy-risk {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+      .risk-Low {
+        color: var(--success);
+        border-color: rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.1);
+      }
+      .risk-Medium {
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.3);
+        background: rgba(245, 158, 11, 0.1);
+      }
+      .risk-High {
+        color: var(--danger);
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      .policies-loading {
+        grid-column: 1 / -1;
+        background: rgba(17, 17, 28, 0.9);
+        border: 1px dashed var(--border-hl);
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        color: var(--text-sec);
+        font-size: 14px;
+      }
+      .policies-loading::before {
+        content: "";
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-right: 12px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .policy-desc {
+        font-size: 13px;
+        color: var(--text-sec);
+        margin-bottom: 20px;
+        flex: 1;
+        line-height: 1.6;
+      }
+
+      .policy-impacts {
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .impact-tag {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        color: #c4b5fd;
+        background: rgba(139, 92, 246, 0.1);
+        padding: 3px 8px;
+        border-radius: 5px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+      }
+
+      /* ── METRICS PANEL ── */
+      #metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .metric-box {
+        background: rgba(17, 17, 28, 0.6);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        transition: border-color 0.3s;
+      }
+      .metric-box:hover {
+        border-color: var(--border-hl);
+      }
+
+      .metric-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        align-items: center;
+      }
+      .metric-label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-sec);
+        letter-spacing: 1.5px;
+        font-weight: bold;
+      }
+      .metric-icon {
+        font-size: 16px;
+      }
+
+      .metric-val {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 10px;
+        font-variant-numeric: tabular-nums;
+      }
+      .metric-bar-bg {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .metric-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .target-panel {
+        grid-column: span 2;
+        background: rgba(139, 92, 246, 0.06);
+        border: 1px dashed var(--border-hl);
+        border-radius: 14px;
+        padding: 16px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: #fff;
+        border: 1px solid var(--border-glow);
+        padding: 16px 32px;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: var(--font-ui);
+        transition: all 0.3s;
+        box-shadow: 0 2px 12px rgba(124, 58, 237, 0.25);
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
+      }
+
+      /* ── FINAL REPORT OVERLAY ── */
+      body.report-mode {
+        overflow: hidden;
+      }
+      body.report-mode #app {
+        filter: blur(18px);
+        opacity: 0.25;
+        pointer-events: none;
+        transition:
+          filter 0.6s ease,
+          opacity 0.6s ease;
+      }
+
+      #game-overlay {
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(139, 92, 246, 0.18),
+            transparent 55%
+          ),
+          rgba(10, 10, 15, 0.96);
+        backdrop-filter: blur(22px);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 60px;
+        box-sizing: border-box;
+        opacity: 0;
+        transition: opacity 0.6s ease;
+      }
+      #game-overlay.report-visible {
+        display: flex;
+        opacity: 1;
+      }
+
+      #final-report {
+        width: 100%;
+        max-width: 1200px;
+        max-height: 90vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        row-gap: 20px;
+        color: var(--text-pri);
+      }
+
+      .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 22px;
+        border-radius: 20px;
+        background: linear-gradient(
+          135deg,
+          rgba(109, 40, 217, 0.2),
+          rgba(17, 17, 28, 0.95)
+        );
+        border: 1px solid var(--border-glow);
+        box-shadow:
+          0 18px 60px rgba(0, 0, 0, 0.65),
+          0 0 20px var(--glow-purple);
+      }
+
+      .report-title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .report-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .report-subtitle {
+        font-size: 11px;
+        color: var(--text-sec);
+        font-family: var(--font-mono);
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      .report-header-stats {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        border: 1px solid var(--border-hl);
+        background: rgba(17, 17, 28, 0.9);
+        box-shadow: 0 0 20px var(--glow-purple);
+      }
+      .status-badge span {
+        font-size: 18px;
+      }
+      .status-equilibrium {
+        color: var(--success);
+        border-color: rgba(16, 185, 129, 0.5);
+      }
+      .status-partial {
+        color: var(--warning);
+        border-color: rgba(245, 158, 11, 0.5);
+      }
+      .status-collapse {
+        color: var(--danger);
+        border-color: rgba(239, 68, 68, 0.5);
+      }
+
+      .header-stat-chip {
+        min-width: 120px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: rgba(17, 17, 28, 0.9);
+        border: 1px solid var(--border);
+        text-align: right;
+      }
+      .header-stat-label {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        letter-spacing: 1.3px;
+        text-transform: uppercase;
+        color: var(--text-sec);
+      }
+      .header-stat-value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .report-main {
+        display: grid;
+        grid-template-columns: 1.6fr 1.2fr;
+        gap: 18px;
+        max-height: 100%;
+        overflow: hidden;
+      }
+
+      .report-column {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow: hidden;
+      }
+
+      .report-panel {
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(139, 92, 246, 0.08),
+            transparent 60%
+          ),
+          rgba(17, 17, 28, 0.96);
+        border-radius: 18px;
+        border: 1px solid var(--border-glow);
+        padding: 16px 18px;
+        box-shadow: 0 14px 45px rgba(0, 0, 0, 0.8);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: hidden;
+      }
+
+      .report-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+      .report-panel-title {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .report-panel-tag {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        padding: 2px 6px;
+        border-radius: 999px;
+        border: 1px solid var(--border-hl);
+        color: var(--text-sec);
+      }
+
+      /* SECTION 1 — METRICS */
+      .report-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .report-metric {
+        background: rgba(17, 17, 28, 0.95);
+        border-radius: 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .report-metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .report-metric-label {
+        font-size: 11px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text-sec);
+      }
+      .report-metric-value {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .report-metric-trend {
+        font-size: 12px;
+      }
+      .trend-up {
+        color: var(--success);
+      }
+      .trend-down {
+        color: var(--danger);
+      }
+      .trend-stable {
+        color: var(--warning);
+      }
+      .report-metric-bar-bg {
+        margin-top: 6px;
+        width: 100%;
+        height: 7px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .report-metric-bar {
+        width: 0%;
+        height: 100%;
+        border-radius: 999px;
+        transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* SECTION 2 — AI PERFORMANCE CARDS */
+      .ai-analysis-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .ai-analysis-card {
+        background: rgba(17, 17, 28, 0.95);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 10px 11px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s ease,
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      .ai-analysis-card:hover {
+        border-color: var(--border-glow);
+        transform: translateY(-2px);
+        box-shadow:
+          0 10px 30px rgba(0, 0, 0, 0.8),
+          0 0 12px var(--glow-purple);
+      }
+      .ai-analysis-title {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .ai-analysis-score {
+        font-size: 11px;
+        margin-bottom: 4px;
+        color: var(--text-sec);
+      }
+      .ai-analysis-body {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-sec);
+      }
+
+      /* SECTION 3 — DECISION TIMELINE */
+      .timeline-scroll {
+        max-height: 260px;
+        overflow-y: auto;
+        padding-right: 6px;
+      }
+      .timeline-entry {
+        border-left: 2px solid rgba(139, 92, 246, 0.5);
+        margin-left: 6px;
+        padding-left: 10px;
+        padding-bottom: 10px;
+        position: relative;
+      }
+      .timeline-entry::before {
+        content: "";
+        position: absolute;
+        left: -6px;
+        top: 4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 12px var(--glow-purple);
+      }
+      .timeline-turn-label {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text-sec);
+        margin-bottom: 2px;
+      }
+      .timeline-policy {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .timeline-risk-chip {
+        display: inline-block;
+        margin-top: 2px;
+        font-size: 9px;
+        font-family: var(--font-mono);
+        padding: 1px 6px;
+        border-radius: 999px;
+        border: 1px solid var(--border-hl);
+      }
+      .timeline-impacts {
+        margin-top: 4px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .timeline-impact-pill {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: rgba(17, 17, 28, 0.9);
+        border: 1px solid var(--border);
+      }
+
+      /* SECTION 4 — GOVERNANCE PROFILE */
+      .profile-body {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--text-sec);
+      }
+      .profile-archetype {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      /* SECTION 5 — FINAL VERDICT */
+      .verdict-body {
+        font-size: 14px;
+        line-height: 1.8;
+        color: var(--text-sec);
+      }
+
+      .report-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 4px;
+      }
+      .footer-hint {
+        font-size: 11px;
+        color: var(--text-sec);
+        font-family: var(--font-mono);
+      }
+      .footer-actions {
+        display: flex;
+        gap: 10px;
+      }
+      .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-sec);
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: var(--font-ui);
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+      .btn-ghost:hover {
+        color: var(--text-pri);
+        border-color: var(--border-glow);
+        background: rgba(139, 92, 246, 0.08);
+        box-shadow: 0 0 8px var(--glow-purple);
+        transform: translateY(-1px);
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        border: 1px solid var(--border-glow);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        box-shadow: 0 2px 12px rgba(124, 58, 237, 0.25);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
+      }
+
+      @media (max-width: 900px) {
+        #game-overlay {
+          padding: 24px 16px;
+        }
+        #final-report {
+          max-height: 100vh;
+        }
+        .report-main {
+          grid-template-columns: 1fr;
+        }
+        .ai-analysis-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── BACK BUTTON ── */
+      .back-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9999;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: rgba(17, 17, 28, 0.75);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text-pri);
+        font-family: var(--font-ui);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+      }
+      .back-btn:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: var(--border-hl);
+        box-shadow: 0 0 16px var(--glow-purple);
+      }
+    </style>
+  </head>
+  <body>
+    <button type="button" class="back-btn" id="back-btn" aria-label="Back to Home">← Back</button>
+    <div id="app">
+      <!-- TOP ROW -->
+      <div id="top-row">
+        <div id="city-container">
+          <div id="status-bar">
+            <div class="status-item">
+              <span class="status-label">Global Equilibrium</span>
+              <span class="status-val" id="ui-global-status">STABLE</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Chronos Cycle</span>
+              <span class="status-val turn" id="ui-turn-display">0 / 10</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="ai-panel">
+          <div class="ai-header">
+            <div class="ai-icon">🌀</div>
+            <div>
+              <div class="ai-title gradient-text">Predictive Engine</div>
+              <div class="ai-subtitle">Trade-off Analytics</div>
+            </div>
+          </div>
+          <div id="ai-feed"></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div id="bottom-row">
+        <div id="policies-panel">
+          <div class="section-header">
+            <span>Strategic Interventions</span>
+            <span
+              style="color: var(--text-sec); font-size: 9px; font-weight: bold"
+              >CHOOSE ONE PER TURN CYCLE</span
+            >
+          </div>
+          <div id="policies-grid"></div>
+        </div>
+
+        <div id="metrics-panel">
+          <div class="section-header">Analysis Metrics</div>
+          <div id="metrics-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-overlay">
+      <div id="final-report">
+        <!-- HEADER -->
+        <div class="report-header">
+          <div class="report-title-block">
+            <div class="report-title">Simulation Outcome Report</div>
+            <div class="report-subtitle">
+              AI Governance Engine — Post-Run Diagnostic
+            </div>
+          </div>
+          <div class="report-header-stats">
+            <div id="report-status-badge" class="status-badge status-partial">
+              <span>⚠</span> <span>PARTIAL STABILIZATION</span>
+            </div>
+            <div class="header-stat-chip">
+              <div class="header-stat-label">Total Turns Played</div>
+              <div id="report-turns" class="header-stat-value">0</div>
+            </div>
+            <div class="header-stat-chip">
+              <div class="header-stat-label">Governance Score</div>
+              <div id="report-score" class="header-stat-value">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="report-main">
+          <!-- LEFT COLUMN -->
+          <div class="report-column">
+            <!-- Section 1: Metrics -->
+            <section class="report-panel" id="report-metrics-panel">
+              <div class="report-panel-header">
+                <div class="report-panel-title">Metric Analysis</div>
+                <div class="report-panel-tag">SECTOR STATUS</div>
+              </div>
+              <div id="report-metrics" class="report-metrics-grid"></div>
+            </section>
+
+            <!-- Section 2: AI Performance Analysis -->
+            <section class="report-panel">
+              <div class="report-panel-header">
+                <div class="report-panel-title">AI Performance Analysis</div>
+                <div class="report-panel-tag">SYSTEM INTERPRETATION</div>
+              </div>
+              <div id="report-ai-analysis" class="ai-analysis-grid"></div>
+            </section>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="report-column">
+            <!-- Section 3: Decision Timeline -->
+            <section class="report-panel" id="report-timeline-section">
+              <div class="report-panel-header">
+                <div class="report-panel-title">Decision Timeline</div>
+                <div class="report-panel-tag">TURN-BY-TURN LOG</div>
+              </div>
+              <div id="report-timeline" class="timeline-scroll"></div>
+            </section>
+
+            <!-- Section 4: Governance Profile -->
+            <section class="report-panel">
+              <div class="report-panel-header">
+                <div class="report-panel-title">Governance Profile</div>
+                <div class="report-panel-tag">LEADERSHIP ARCHETYPE</div>
+              </div>
+              <div id="report-profile" class="profile-body">
+                <!-- Filled dynamically -->
+              </div>
+            </section>
+
+            <!-- Section 5: Final AI Verdict -->
+            <section class="report-panel">
+              <div class="report-panel-header">
+                <div class="report-panel-title">Final AI Verdict</div>
+                <div class="report-panel-tag">LONG-TERM PROJECTION</div>
+              </div>
+              <div id="report-verdict" class="verdict-body">
+                <!-- Filled dynamically -->
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="report-footer">
+          <div class="footer-hint">
+            REPORT GENERATED BY PREDICTIVE ENGINE // ARCHIVED IN CIVIC LEDGER
+          </div>
+          <div class="footer-actions">
+            <button
+              class="btn-ghost"
+              type="button"
+              onclick="scrollToDecisionReplay()"
+            >
+              View Decision Replay
+            </button>
+            <button
+              class="btn-ghost"
+              type="button"
+              onclick="exportFinalReport()"
+            >
+              Export Report
+            </button>
+            <button
+              class="btn btn-primary"
+              type="button"
+              onclick="restartFromReport()"
+            >
+              Restart Simulation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+      // ============================================================================
+      // SIM ENGINE
+      // ============================================================================
+
+      function escapeHtml(s) {
+        if (!s) return "";
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      const INITIAL_POLICIES = [
+        {
+          id: "reskilling",
+          title: "Invest in AI Reskilling",
+          description:
+            "Direct capital towards retraining the workforce for the automated economy.",
+          impacts: {
+            employment: 15,
+            governmentBudget: -20,
+            publicHappiness: 10,
+          },
+          riskLevel: "Low",
+        },
+        {
+          id: "ubi",
+          title: "Introduce Universal Basic Income",
+          description:
+            "Stabilize household consumption amid automation-induced job displacement.",
+          impacts: {
+            inequality: -25,
+            publicHappiness: 20,
+            economy: 5,
+            governmentBudget: -30,
+          },
+          riskLevel: "High",
+        },
+        {
+          id: "tax_corp",
+          title: "Tax AI Corporations",
+          description:
+            "Rebalance wealth by taxing productivity gains from algorithmic labour.",
+          impacts: {
+            governmentBudget: 25,
+            inequality: -10,
+            economy: -15,
+            employment: -5,
+          },
+          riskLevel: "Medium",
+        },
+        {
+          id: "restrict_ai",
+          title: "Restrict Automation",
+          description:
+            "Mandate human presence in critical sectors to protect societal cohesion.",
+          impacts: { employment: 20, economy: -20, publicHappiness: 5 },
+          riskLevel: "High",
+        },
+        {
+          id: "promote_ai",
+          title: "Promote AI Innovation",
+          description:
+            "Accelerate the transition to a high-efficiency autonomous economy.",
+          impacts: {
+            economy: 25,
+            inequality: 15,
+            employment: -15,
+            governmentBudget: -10,
+          },
+          riskLevel: "Medium",
+        },
+      ];
+
+      const API_BASE = "https://system-the-hack.onrender.com";
+      const DECISION_HISTORY_SIZE = 5;
+
+      const METRIC_DEFS = [
+        { key: "employment", label: "Employment", icon: "👥" },
+        { key: "economy", label: "Economy", icon: "📈" },
+        { key: "publicHappiness", label: "Happiness", icon: "😊" },
+        { key: "inequality", label: "Equality", icon: "⚖️" },
+        { key: "governmentBudget", label: "Budget", icon: "💰" },
+      ];
+
+      let gameState = { turn: 0, metrics: {}, status: "playing" };
+      let currentPolicies = [...INITIAL_POLICIES];
+      let decisionHistory = [];
+      let turnSnapshots = [];
+      let lastReportData = null;
+
+      function applyPolicyLogic(state, policy) {
+        const newMetrics = { ...state.metrics };
+        for (const [key, value] of Object.entries(policy.impacts))
+          newMetrics[key] += value;
+
+        if (newMetrics.economy > 80) newMetrics.employment += 5;
+        if (newMetrics.inequality > 70) newMetrics.publicHappiness -= 10;
+        if (newMetrics.employment < 30) newMetrics.publicHappiness -= 15;
+        if (newMetrics.publicHappiness < 40) newMetrics.economy -= 10;
+        if (newMetrics.governmentBudget < 20) newMetrics.economy -= 5;
+
+        newMetrics.publicHappiness -= 1;
+        newMetrics.governmentBudget -= 1;
+        for (const k of Object.keys(newMetrics))
+          newMetrics[k] = Math.min(
+            Math.max(newMetrics[k] + (Math.floor(Math.random() * 5) - 2), 0),
+            100,
+          );
+
+        const vals = Object.values(newMetrics);
+        let status = "playing";
+        if (vals.filter((v) => v < 20).length >= 2) status = "lost";
+        else if (vals.every((v) => v > 75)) status = "won";
+
+        return { turn: state.turn + 1, metrics: newMetrics, status };
+      }
+
+      function renderMetrics() {
+        const grid = document.getElementById("metrics-grid");
+        grid.innerHTML = "";
+        METRIC_DEFS.forEach((def) => {
+          const val = gameState.metrics[def.key];
+          const color =
+            val >= 70
+              ? "var(--success)"
+              : val >= 40
+                ? "var(--warning)"
+                : "var(--danger)";
+          grid.innerHTML += `<div class="metric-box"><div class="metric-header"><span class="metric-label">${def.label}</span><span class="metric-icon">${def.icon}</span></div><div class="metric-val" style="color:${color}">${val}</div><div class="metric-bar-bg"><div class="metric-bar" style="width:${val}%;background:${color}"></div></div></div>`;
+        });
+        grid.innerHTML += `<div class="target-panel"><div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);font-weight:bold;margin-bottom:5px;">TARGET PARAMETER</div><div style="font-size:14px;font-weight:500;">Win: All Sectors > 75%</div></div>`;
+        document.getElementById("ui-turn-display").textContent =
+          `${gameState.turn} / 10`;
+        const isCrit = Object.values(gameState.metrics).some((v) => v < 30);
+        document.getElementById("ui-global-status").innerHTML = isCrit
+          ? '<span style="color:var(--warning)">UNSTABLE</span>'
+          : '<span style="color:var(--success)">STABLE</span>';
+      }
+
+      function renderPolicies(showLoading = false) {
+        const grid = document.getElementById("policies-grid");
+        grid.innerHTML = "";
+        if (showLoading) {
+          grid.innerHTML =
+            '<div class="policies-loading">Predictive Engine generating next interventions…</div>';
+          return;
+        }
+        const disabled = gameState.status !== "playing";
+        currentPolicies.forEach((p) => {
+          const safeId = p.id.replace(/'/g, "\\'");
+          grid.innerHTML += `<div class="policy-card ${disabled ? "disabled" : ""}" onclick="onPolicyClick('${safeId}')"><div class="policy-header"><div class="policy-title">${p.title}</div><div class="policy-risk risk-${p.riskLevel}">${p.riskLevel}</div></div><div class="policy-desc">${p.description}</div><div class="policy-impacts">${Object.keys(
+            p.impacts,
+          )
+            .map((k) => `<span class="impact-tag">#${k}</span>`)
+            .join("")}</div></div>`;
+        });
+      }
+
+      function computeSimulationResult(status, turn, metrics) {
+        const criticalCount = Object.values(metrics).filter(
+          (v) => v < 20,
+        ).length;
+        if (status === "won") {
+          return { code: "WIN", label: "SOCIAL EQUILIBRIUM" };
+        }
+        if (status === "lost" || criticalCount >= 2) {
+          return { code: "FAILURE", label: "SYSTEM COLLAPSE" };
+        }
+        if (turn >= 10) {
+          return { code: "STABILIZED", label: "PARTIAL STABILIZATION" };
+        }
+        return { code: "ONGOING", label: "SIMULATION RUNNING" };
+      }
+
+      function governanceScoreFromMetrics(metrics) {
+        const {
+          employment,
+          economy,
+          publicHappiness,
+          inequality,
+          governmentBudget,
+        } = metrics;
+        const raw =
+          (employment +
+            economy +
+            publicHappiness +
+            governmentBudget -
+            inequality) /
+          4;
+        return Math.max(0, Math.min(100, Math.round(raw)));
+      }
+
+      function buildReportMetrics(finalMetrics) {
+        const first = turnSnapshots[0]?.metricsBefore || finalMetrics;
+        const entries = [];
+        METRIC_DEFS.forEach((def) => {
+          const current = finalMetrics[def.key] ?? 0;
+          const baseline = first[def.key] ?? 0;
+          const delta = current - baseline;
+          let trendClass = "trend-stable";
+          let arrow = "→";
+          if (delta > 2) {
+            trendClass = "trend-up";
+            arrow = "↑";
+          } else if (delta < -2) {
+            trendClass = "trend-down";
+            arrow = "↓";
+          }
+          entries.push({ def, current, delta, trendClass, arrow });
+        });
+        return entries;
+      }
+
+      function buildPerformanceAnalysis(finalMetrics, decisions) {
+        const turns = decisions.length;
+        const avgRisk =
+          decisions.reduce((acc, d) => {
+            const map = { Low: 1, Medium: 2, High: 3 };
+            return acc + (map[d.riskLevel] || 2);
+          }, 0) / (turns || 1);
+
+        const eco = finalMetrics.economy;
+        const soc = finalMetrics.publicHappiness - finalMetrics.inequality;
+        const emp = finalMetrics.employment;
+
+        const clamp01 = (v) => Math.max(0, Math.min(100, v));
+
+        const economicScore = clamp01(
+          (eco + finalMetrics.governmentBudget) / 2,
+        );
+        const socialScore = clamp01(soc);
+        const riskScore = clamp01(100 - avgRisk * 30);
+
+        return [
+          {
+            id: "econ",
+            title: "Economic Resilience",
+            score: economicScore,
+            body:
+              economicScore > 75
+                ? "Macro indicators suggest a resilient production base with sufficient fiscal breathing room."
+                : economicScore > 50
+                  ? "Growth remained volatile but core institutions withstood systemic stress."
+                  : "The economic core absorbed repeated shocks, leaving the system vulnerable to future perturbations.",
+          },
+          {
+            id: "social",
+            title: "Social Stability",
+            score: socialScore,
+            body:
+              socialScore > 60
+                ? "Collective sentiment remained broadly supportive of governance decisions, limiting civil unrest vectors."
+                : socialScore > 30
+                  ? "Population mood oscillated between cautious trust and latent strain, requiring targeted interventions."
+                  : "Public trust eroded across multiple cohorts, amplifying the risk of cascading social disruptions.",
+          },
+          {
+            id: "policy",
+            title: "Policy Efficiency",
+            score: governanceScoreFromMetrics(finalMetrics),
+            body:
+              turns > 0
+                ? "Interventions were sequenced with measurable impact, though some trade-offs compounded over time."
+                : "Too few interventions were deployed to construct a reliable efficiency profile.",
+          },
+          {
+            id: "risk",
+            title: "Risk Management",
+            score: riskScore,
+            body:
+              avgRisk < 1.7
+                ? "Risk posture stayed conservative, prioritizing system integrity over aggressive expansion."
+                : avgRisk < 2.3
+                  ? "Risk appetite oscillated, alternating between defensive safeguards and opportunistic bets."
+                  : "High‑risk strategies dominated, amplifying volatility across economic and social layers.",
+          },
+        ];
+      }
+
+      function deriveArchetype(finalMetrics, decisions) {
+        const turns = decisions.length || 1;
+        const riskMap = { Low: 1, Medium: 2, High: 3 };
+        const avgRisk =
+          decisions.reduce((acc, d) => acc + (riskMap[d.riskLevel] || 2), 0) /
+          turns;
+
+        const eco = finalMetrics.economy;
+        const soc = finalMetrics.publicHappiness;
+        const ine = finalMetrics.inequality;
+
+        if (eco >= 70 && avgRisk >= 2.3) {
+          return {
+            label: "Corporate Expansionist",
+            text: "You prioritized productivity, capital flow, and macro‑scale growth, accepting social and distributional friction as collateral. The city reads you as a strategist of expansion rather than equilibrium.",
+          };
+        }
+        if (soc >= 65 && ine <= 45) {
+          return {
+            label: "Welfare Stabilizer",
+            text: "You consistently buffered households against shocks, using fiscal tools to dampen inequality and sustain public morale. Stability was treated as both a moral and strategic objective.",
+          };
+        }
+        if (eco >= 65 && soc >= 65 && ine <= 40) {
+          return {
+            label: "Technocratic Optimizer",
+            text: "You treated the city as a coupled socio‑economic system, tuning levers to keep most indicators within acceptable bands. Decisions show a preference for balanced, data‑driven optimization over ideology.",
+          };
+        }
+        if (avgRisk >= 2.4 || turns < 4) {
+          return {
+            label: "Reactive Crisis Manager",
+            text: "You governed from the eye of the storm — responding sharply to emerging threats rather than sculpting long‑term structure. The system stabilized when it could, but was rarely allowed to forget the last emergency.",
+          };
+        }
+        return {
+          label: "Adaptive Mediator",
+          text: "You navigated between competing priorities, never fully committing to a single doctrine. Trade‑offs were accepted as inevitable, and your governance left multiple futures still in play.",
+        };
+      }
+
+      function buildFinalVerdict(simResult, finalMetrics, turns) {
+        const score = governanceScoreFromMetrics(finalMetrics);
+        if (simResult.code === "WIN") {
+          return (
+            "The governance engine classifies this run as a successful stabilization of systemic risk. " +
+            `Across ${turns} turns, key indicators converged toward sustainable bands, and no critical fault lines remained unaddressed. ` +
+            "Projected long‑term outlook: high resilience under ordinary volatility, with sufficient fiscal and social buffers to absorb rare shocks."
+          );
+        }
+        if (simResult.code === "FAILURE") {
+          return (
+            "The simulation terminates in structural imbalance. Interacting shocks in employment, inequality, and sentiment produced a feedback loop that governance tools could no longer offset. " +
+            "Absent a radical redesign of institutions, the model forecasts recurring crises and a slow erosion of civic legitimacy."
+          );
+        }
+        if (simResult.code === "STABILIZED") {
+          return (
+            "The system reaches a plateau: not collapsed, not fully secure. " +
+            "Key metrics hover around fragile equilibrium bands, indicating that modest shocks can be absorbed but compound stressors may still cascade. " +
+            "With targeted reforms and more coherent long‑horizon planning, this trajectory can still bend toward durable stability."
+          );
+        }
+        return "The engine holds the run in an indeterminate state. Additional turns are required before issuing a definitive macro‑governance verdict.";
+      }
+
+      function buildReportTimeline(decisions) {
+        return decisions.map((d, idx) => {
+          const before = d.metricsBefore || {};
+          const after = d.metricsAfter || {};
+          const deltaStrs = [];
+          Object.keys(after).forEach((k) => {
+            const dv = (after[k] ?? 0) - (before[k] ?? 0);
+            if (dv === 0) return;
+            const arrow = dv > 0 ? "↑" : "↓";
+            deltaStrs.push(`${k}: ${arrow}${Math.abs(dv)}`);
+          });
+          return {
+            ...d,
+            label: `Turn ${d.turn + 1}`,
+            deltas: deltaStrs.slice(0, 4),
+          };
+        });
+      }
+
+      function renderFinalReport(data) {
+        lastReportData = data;
+        const { analysis, finalMetrics, decisionHistory, turnsPlayed, result } =
+          data;
+
+        const body = document.body;
+        body.classList.add("report-mode");
+
+        const overlay = document.getElementById("game-overlay");
+        const statusBadge = document.getElementById("report-status-badge");
+        const turnsEl = document.getElementById("report-turns");
+        const scoreEl = document.getElementById("report-score");
+        const metricsRoot = document.getElementById("report-metrics");
+        const aiRoot = document.getElementById("report-ai-analysis");
+        const timelineRoot = document.getElementById("report-timeline");
+        const profileRoot = document.getElementById("report-profile");
+        const verdictRoot = document.getElementById("report-verdict");
+
+        // Header
+        turnsEl.textContent = String(turnsPlayed);
+        const score = governanceScoreFromMetrics(finalMetrics);
+        scoreEl.textContent = `${score}`;
+
+        statusBadge.classList.remove(
+          "status-equilibrium",
+          "status-partial",
+          "status-collapse",
+        );
+        let badgeClass = "status-partial";
+        let badgeIcon = "⚠";
+        let badgeText = "PARTIAL STABILIZATION";
+        if (result === "WIN") {
+          badgeClass = "status-equilibrium";
+          badgeIcon = "✅";
+          badgeText = "SOCIETAL EQUILIBRIUM";
+        } else if (result === "FAILURE") {
+          badgeClass = "status-collapse";
+          badgeIcon = "❌";
+          badgeText = "SYSTEM COLLAPSE";
+        }
+        statusBadge.classList.add(badgeClass);
+        statusBadge.innerHTML = `<span>${badgeIcon}</span><span>${badgeText}</span>`;
+
+        // Metrics
+        const metricEntries = buildReportMetrics(finalMetrics);
+        metricsRoot.innerHTML = metricEntries
+          .map((m) => {
+            const val = m.current;
+            const color =
+              val >= 70
+                ? "var(--success)"
+                : val >= 40
+                  ? "var(--warning)"
+                  : "var(--danger)";
+            return `
+            <div class="report-metric">
+              <div class="report-metric-header">
+                <div class="report-metric-label">${m.def.label}</div>
+                <div class="report-metric-value" style="color:${color}">${val}%</div>
+              </div>
+              <div class="report-metric-header" style="margin-top:2px;">
+                <div class="report-metric-trend ${m.trendClass}">
+                  ${m.arrow}
+                  ${
+                    m.delta === 0
+                      ? "Stable"
+                      : (m.delta > 0 ? "+" : "") + m.delta.toString()
+                  }
+                </div>
+              </div>
+              <div class="report-metric-bar-bg">
+                <div class="report-metric-bar" data-target="${val}" style="background:${color}"></div>
+              </div>
+            </div>`;
+          })
+          .join("");
+
+        // AI performance analysis
+        const perfCards = buildPerformanceAnalysis(
+          finalMetrics,
+          decisionHistory,
+        );
+        aiRoot.innerHTML = perfCards
+          .map(
+            (card) => `
+          <article class="ai-analysis-card">
+            <div class="ai-analysis-title">${card.title}</div>
+            <div class="ai-analysis-score">Score: ${card.score}</div>
+            <div class="ai-analysis-body">${card.body}</div>
+          </article>`,
+          )
+          .join("");
+
+        // Timeline
+        const timelineEntries = buildReportTimeline(decisionHistory);
+        timelineRoot.innerHTML =
+          timelineEntries.length === 0
+            ? `<div style="font-size:12px;color:var(--text-sec);">No decisions recorded in this run.</div>`
+            : timelineEntries
+                .map(
+                  (t) => `
+          <div class="timeline-entry">
+            <div class="timeline-turn-label">${t.label}</div>
+            <div class="timeline-policy">${t.title}</div>
+            <div class="timeline-risk-chip">Risk: ${t.riskLevel || "N/A"}</div>
+            ${
+              t.deltas.length
+                ? `<div class="timeline-impacts">
+                    ${t.deltas
+                      .map(
+                        (d) => `<span class="timeline-impact-pill">${d}</span>`,
+                      )
+                      .join("")}
+                   </div>`
+                : ""
+            }
+          </div>`,
+                )
+                .join("");
+
+        // Governance profile
+        const archetype = deriveArchetype(finalMetrics, decisionHistory);
+        profileRoot.innerHTML = `
+          <div class="profile-archetype">${archetype.label}</div>
+          <div>${archetype.text}</div>
+        `;
+
+        // Final verdict
+        const verdictText = buildFinalVerdict(
+          analysis || { code: result },
+          finalMetrics,
+          turnsPlayed,
+        );
+        verdictRoot.textContent = verdictText;
+
+        // Show overlay & animate bars
+        overlay.classList.add("report-visible");
+        requestAnimationFrame(() => {
+          const bars = overlay.querySelectorAll(".report-metric-bar");
+          bars.forEach((bar) => {
+            const target = parseInt(bar.getAttribute("data-target") || "0", 10);
+            bar.style.width = `${target}%`;
+          });
+        });
+      }
+
+      async function onPolicyClick(id) {
+        if (gameState.status !== "playing") return;
+        const policy = currentPolicies.find((p) => p.id === id);
+        if (!policy) return;
+
+        const beforeMetrics = { ...gameState.metrics };
+
+        decisionHistory.push({
+          id: policy.id,
+          title: policy.title,
+          turn: gameState.turn,
+          riskLevel: policy.riskLevel,
+          metricsBefore: beforeMetrics,
+        });
+        if (decisionHistory.length > DECISION_HISTORY_SIZE)
+          decisionHistory.shift();
+
+        gameState = applyPolicyLogic(gameState, policy);
+        const afterMetrics = { ...gameState.metrics };
+        const lastIdx = decisionHistory.length - 1;
+        if (lastIdx >= 0) {
+          decisionHistory[lastIdx].metricsAfter = afterMetrics;
+        }
+        turnSnapshots.push({
+          turn: gameState.turn,
+          metricsBefore: beforeMetrics,
+          metricsAfter: afterMetrics,
+        });
+        const logType =
+          gameState.status === "won"
+            ? "success"
+            : gameState.status === "lost"
+              ? "failure"
+              : "";
+        const feed = document.getElementById("ai-feed");
+        feed.innerHTML += `<div class="log-entry ${logType}"><div class="log-turn">LOG // TURN ${gameState.turn}</div>Intervention <strong>${policy.title}</strong> deployed.</div>`;
+        feed.scrollTop = feed.scrollHeight;
+        renderMetrics();
+
+        const simResult = computeSimulationResult(
+          gameState.status,
+          gameState.turn,
+          gameState.metrics,
+        );
+
+        if (
+          simResult.code === "WIN" ||
+          simResult.code === "FAILURE" ||
+          simResult.code === "STABILIZED"
+        ) {
+          const reportPayload = {
+            analysis: { code: simResult.code },
+            finalMetrics: gameState.metrics,
+            decisionHistory: [...decisionHistory],
+            turnsPlayed: gameState.turn,
+            result: simResult.code,
+          };
+          renderFinalReport(reportPayload);
+          return;
+        }
+
+        renderPolicies(true);
+        try {
+          const res = await fetch(`${API_BASE}/api/generate-interventions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chosenPolicy: {
+                title: policy.title,
+                description: policy.description,
+              },
+              metrics: gameState.metrics,
+              turn: gameState.turn,
+              decisionHistory,
+            }),
+          });
+          const data = await res.json();
+          if (data.interventions && data.interventions.length > 0) {
+            currentPolicies = data.interventions;
+            if (data.decisionExplanation) {
+              feed.innerHTML += `<div class="log-entry analysis"><div class="log-turn">PREDICTIVE ENGINE</div>${escapeHtml(data.decisionExplanation)}</div>`;
+            }
+            feed.innerHTML += `<div class="log-entry system"><div class="log-turn">LOG // TURN ${gameState.turn}</div>Predictive Engine: ${data.interventions.length} new interventions generated (butterfly effect chain).</div>`;
+          } else {
+            currentPolicies = [...INITIAL_POLICIES];
+            feed.innerHTML += `<div class="log-entry failure"><div class="log-turn">LOG // TURN ${gameState.turn}</div>API fallback: reverting to default interventions.</div>`;
+          }
+        } catch (err) {
+          currentPolicies = [...INITIAL_POLICIES];
+          feed.innerHTML += `<div class="log-entry failure"><div class="log-turn">LOG // TURN ${gameState.turn}</div>Predictive Engine offline. Fallback interventions loaded.</div>`;
+        }
+        feed.scrollTop = feed.scrollHeight;
+        renderPolicies();
+      }
+
+      function initGame() {
+        const overlay = document.getElementById("game-overlay");
+        overlay.classList.remove("report-visible");
+        document.body.classList.remove("report-mode");
+        gameState = {
+          turn: 0,
+          metrics: {
+            employment: 45,
+            economy: 46,
+            publicHappiness: 48,
+            inequality: 50,
+            governmentBudget: 52,
+          },
+          status: "playing",
+        };
+        currentPolicies = [...INITIAL_POLICIES];
+        decisionHistory = [];
+        turnSnapshots = [];
+        lastReportData = null;
+        document.getElementById("ai-feed").innerHTML =
+          '<div class="log-entry system"><div class="log-turn">LOG // TURN 0</div>Simulation initialized. System awaiting directives.</div>';
+        renderMetrics();
+        renderPolicies();
+      }
+
+      function restartFromReport() {
+        initGame();
+      }
+
+      function scrollToDecisionReplay() {
+        const section = document.getElementById("report-timeline-section");
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+
+      function exportFinalReport() {
+        if (!lastReportData) return;
+        const blob = new Blob([JSON.stringify(lastReportData, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "governance-simulation-report.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      initGame();
+
+      // ============================================================================
+      // THREE.JS — SEMI-REALISTIC MORNING CITY (rebuild, logic unchanged)
+      // ============================================================================
+
+      const cityEl = document.getElementById("city-container");
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(cityEl.clientWidth, cityEl.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      cityEl.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x87a0b8);
+      scene.fog = new THREE.Fog(0x9ab0c8, 100, 280);
+
+      const camera = new THREE.PerspectiveCamera(
+        48,
+        cityEl.clientWidth / cityEl.clientHeight,
+        0.5,
+        400,
+      );
+      camera.position.set(0, 42, 72);
+      camera.lookAt(0, 2, 4);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 2, 4);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.enableZoom = false;
+      controls.minDistance = 78;
+      controls.maxDistance = 88;
+      controls.maxPolarAngle = Math.PI * 0.38;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.012;
+
+      const PW = 118,
+        PD = 118,
+        BASE_H = 2.2;
+      const SURFACE = BASE_H;
+      const ROAD_H = 0.08;
+      const ROAD_Y = SURFACE + ROAD_H;
+      const SIDEWALK_H = 0.12;
+      const SIDEWALK_Y = SURFACE + ROAD_H + SIDEWALK_H;
+      const CURB_H = 0.08;
+      const MAIN_W = 12,
+        CROSS_W = 10;
+      const HALF = 59;
+      const SETBACK = 4;
+      const ROAD_EDGE_X = MAIN_W / 2 + SETBACK;
+      const ROAD_EDGE_Z = CROSS_W / 2 + SETBACK;
+      const BUILDING_GAP = 2.5;
+
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: 0x5c6c5c,
+        roughness: 0.92,
+        metalness: 0,
+      });
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(PW, BASE_H, PD),
+        baseMat,
+      );
+      base.position.y = BASE_H / 2;
+      base.receiveShadow = true;
+      scene.add(base);
+
+      const WALL_THICK = 1.8;
+      const WALL_H = 5.2;
+      const WALL_BEVEL = 0.25;
+      const WALL_GRAY = 0x8a8e94;
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: WALL_GRAY,
+        roughness: 0.9,
+        metalness: 0,
+      });
+      const halfP = PD / 2;
+      const halfPW = PW / 2;
+      [
+        [-halfPW + WALL_THICK / 2, 0, 0, WALL_THICK, WALL_H, PD],
+        [halfPW - WALL_THICK / 2, 0, 0, WALL_THICK, WALL_H, PD],
+        [0, 0, halfP - WALL_THICK / 2, PW - WALL_THICK * 2, WALL_H, WALL_THICK],
+        [
+          0,
+          0,
+          -halfP + WALL_THICK / 2,
+          PW - WALL_THICK * 2,
+          WALL_H,
+          WALL_THICK,
+        ],
+      ].forEach(([x, y, z, w, h, d]) => {
+        const seg = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+        seg.position.set(x, SURFACE + h / 2, z);
+        seg.castShadow = true;
+        seg.receiveShadow = true;
+        scene.add(seg);
+        const cap = new THREE.Mesh(
+          new THREE.BoxGeometry(w * 0.98, WALL_BEVEL, d * 0.98),
+          wallMat,
+        );
+        cap.position.set(x, SURFACE + h + WALL_BEVEL / 2, z);
+        scene.add(cap);
+      });
+
+      const grassTones = [0x586858, 0x5a6a5a, 0x546454, 0x5e6e5e];
+      function grassPatch(x, z, W, D, toneIdx) {
+        const mat = new THREE.MeshStandardMaterial({
+          color: grassTones[toneIdx % grassTones.length],
+          roughness: 0.98,
+          metalness: 0,
+        });
+        const g = new THREE.Mesh(new THREE.PlaneGeometry(W, D), mat);
+        g.rotation.x = -Math.PI / 2;
+        g.position.set(x, SURFACE + 0.02, z);
+        scene.add(g);
+      }
+      [
+        [-35, -35, 12, 10, 0],
+        [38, -30, 10, 14, 1],
+        [-40, 30, 14, 12, 2],
+        [32, 38, 11, 11, 3],
+        [-15, -50, 8, 6, 1],
+        [20, -48, 6, 8, 0],
+        [-48, 0, 7, 18, 2],
+        [50, 15, 9, 10, 1],
+      ].forEach(([x, z, W, D, t]) => grassPatch(x, z, W, D, t));
+      [-1, 1].forEach((sx) => {
+        for (let z = -HALF + 6; z <= HALF - 6; z += 14) {
+          if (Math.abs(z) < 18) continue;
+          grassPatch(sx * (HALF - 3), z, 2.5, 3, (sx + 1 + z) % 2);
+        }
+      });
+      function grassStripBetweenRoad(x, z, w, d) {
+        const g = new THREE.Mesh(
+          new THREE.PlaneGeometry(w, d),
+          new THREE.MeshStandardMaterial({ color: 0x5a6a5a, roughness: 0.98 }),
+        );
+        g.rotation.x = -Math.PI / 2;
+        g.position.set(x, SURFACE + 0.025, z);
+        scene.add(g);
+      }
+      [-1, 1].forEach((sx) => {
+        for (let z = -50; z <= 50; z += 18) {
+          if (Math.abs(z) < 14) continue;
+          grassStripBetweenRoad(sx * (MAIN_W / 2 + 0.8), z, 1.2, 4);
+        }
+      });
+
+      const roadMat = new THREE.MeshStandardMaterial({
+        color: 0x2d3238,
+        roughness: 0.95,
+        metalness: 0,
+      });
+      const roadEdgeMat = new THREE.MeshStandardMaterial({
+        color: 0x252a30,
+        roughness: 0.9,
+      });
+      function roadSeg(w, len, cx, cz, rotZ) {
+        const seg = new THREE.Mesh(
+          new THREE.BoxGeometry(w, ROAD_H + 0.02, len),
+          roadMat,
+        );
+        seg.position.set(cx, SURFACE + (ROAD_H + 0.02) / 2, cz);
+        seg.rotation.y = -rotZ;
+        seg.receiveShadow = true;
+        scene.add(seg);
+      }
+      roadSeg(MAIN_W, 112, 0, 0, 0);
+      roadSeg(1.8, 112, 0, 0, 0);
+      roadSeg(CROSS_W, 108, 0, 0, Math.PI / 2);
+      const laneLineMat = new THREE.LineBasicMaterial({
+        color: 0x6a7078,
+        transparent: true,
+        opacity: 0.4,
+      });
+      [-38, -14, 14, 38].forEach((z) => {
+        scene.add(
+          new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(-1.8, ROAD_Y + 0.01, z),
+              new THREE.Vector3(1.8, ROAD_Y + 0.01, z),
+            ]),
+            laneLineMat,
+          ),
+        );
+      });
+      const zebraW = 3.5,
+        zebraD = 0.4;
+      for (let i = -4; i <= 4; i++) {
+        const stripe = new THREE.Mesh(
+          new THREE.BoxGeometry(zebraD, ROAD_Y + 0.02, zebraW),
+          new THREE.MeshStandardMaterial({ color: 0xe8e6e0 }),
+        );
+        stripe.position.set(
+          i * (zebraD + 0.3),
+          SURFACE + (ROAD_Y + 0.02) / 2,
+          0,
+        );
+        scene.add(stripe);
+      }
+
+      const curbMat = new THREE.MeshStandardMaterial({
+        color: 0x606860,
+        roughness: 0.9,
+      });
+      [-MAIN_W / 2 - 1.2, MAIN_W / 2 + 1.2].forEach((ox) => {
+        const c = new THREE.Mesh(
+          new THREE.BoxGeometry(1, CURB_H, 115),
+          curbMat,
+        );
+        c.position.set(ox, SURFACE + CURB_H / 2, 0);
+        scene.add(c);
+      });
+      [-CROSS_W / 2 - 1, CROSS_W / 2 + 1].forEach((oz) => {
+        const c = new THREE.Mesh(
+          new THREE.BoxGeometry(110, CURB_H, 1),
+          curbMat,
+        );
+        c.position.set(0, SURFACE + CURB_H / 2, oz);
+        scene.add(c);
+      });
+
+      const sidewalkMat = new THREE.MeshStandardMaterial({
+        color: 0xc4c0b8,
+        roughness: 0.88,
+      });
+      [-1, 1].forEach((sx) => {
+        for (let z = -HALF + 6; z <= HALF - 6; z += 11) {
+          if (Math.abs(z) < 16) continue;
+          const slab = new THREE.Mesh(
+            new THREE.BoxGeometry(3.2, SIDEWALK_H, 3.8),
+            sidewalkMat,
+          );
+          slab.position.set(
+            sx * (HALF - 3.5),
+            SURFACE + ROAD_H + SIDEWALK_H / 2,
+            z,
+          );
+          slab.receiveShadow = true;
+          scene.add(slab);
+        }
+      });
+
+      const poleMat = new THREE.MeshStandardMaterial({ color: 0x585e68 });
+      const lampMat = new THREE.MeshBasicMaterial({ color: 0xf0e8c8 });
+      [-34, -10, 10, 34].forEach((z) => {
+        [-1, 1].forEach((s) => {
+          const pole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.12, 3.5, 6),
+            poleMat,
+          );
+          pole.position.set(s * (MAIN_W / 2 + 2.5), SURFACE + 1.75, z);
+          pole.castShadow = true;
+          scene.add(pole);
+          const lamp = new THREE.Mesh(
+            new THREE.SphereGeometry(0.22, 8, 6),
+            lampMat,
+          );
+          lamp.position.set(s * (MAIN_W / 2 + 2.5), SURFACE + 3.6, z);
+          scene.add(lamp);
+        });
+      });
+      const trafficPole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 4.5, 6),
+        poleMat,
+      );
+      trafficPole.position.set(MAIN_W / 2 + 3, SURFACE + 2.25, 0);
+      scene.add(trafficPole);
+      const trafficLight = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1, 0.3),
+        new THREE.MeshStandardMaterial({ color: 0x4a5058 }),
+      );
+      trafficLight.position.set(MAIN_W / 2 + 3, SURFACE + 4.6, 0);
+      scene.add(trafficLight);
+      const parkMat = new THREE.MeshStandardMaterial({ color: 0x404448 });
+      [
+        [-MAIN_W / 2 - 2.8, -20],
+        [-MAIN_W / 2 - 2.8, 22],
+        [MAIN_W / 2 + 2.8, -24],
+        [MAIN_W / 2 + 2.8, 18],
+      ].forEach(([x, z]) => {
+        const park = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 4.5), parkMat);
+        park.rotation.x = -Math.PI / 2;
+        park.position.set(x, SURFACE + 0.022, z);
+        scene.add(park);
+      });
+
+      const treeMat = new THREE.MeshStandardMaterial({ color: 0x4a5c4a });
+      const treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4a3a });
+      const TREE_OFFSET = 10;
+      const TREE_SPACING = 12;
+      const INTERSECTION_STOP = 14;
+      const PARK_X_MIN = 44;
+      const PARK_X_MAX = 60;
+      const PARK_Z_MIN = 38;
+      const PARK_Z_MAX = 50;
+      const PLAZA_X = 7;
+      const PLAZA_Z_MIN = -14;
+      const PLAZA_Z_MAX = -6;
+      function isInsidePark(x, z) {
+        return (
+          x >= PARK_X_MIN &&
+          x <= PARK_X_MAX &&
+          z >= PARK_Z_MIN &&
+          z <= PARK_Z_MAX
+        );
+      }
+      function isInsidePlaza(x, z) {
+        return Math.abs(x) <= PLAZA_X && z >= PLAZA_Z_MIN && z <= PLAZA_Z_MAX;
+      }
+      function canPlaceTree(x, z) {
+        return !isInsidePark(x, z) && !isInsidePlaza(x, z);
+      }
+      function addTree(x, z) {
+        const trunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.35, 0.45, 2.2, 6),
+          treeTrunkMat,
+        );
+        trunk.position.set(x, SURFACE + 1.1, z);
+        trunk.castShadow = true;
+        scene.add(trunk);
+        const crown = new THREE.Mesh(
+          new THREE.ConeGeometry(2.2, 4, 6),
+          treeMat,
+        );
+        crown.position.set(x, SURFACE + 3.4, z);
+        crown.castShadow = true;
+        scene.add(crown);
+      }
+      for (let z = -56; z <= 56; z += TREE_SPACING) {
+        if (Math.abs(z) < INTERSECTION_STOP) continue;
+        if (canPlaceTree(-TREE_OFFSET, z)) addTree(-TREE_OFFSET, z);
+        if (canPlaceTree(TREE_OFFSET, z)) addTree(TREE_OFFSET, z);
+      }
+      for (let x = -56; x <= 56; x += TREE_SPACING) {
+        if (Math.abs(x) < INTERSECTION_STOP) continue;
+        if (canPlaceTree(x, -TREE_OFFSET)) addTree(x, -TREE_OFFSET);
+        if (canPlaceTree(x, TREE_OFFSET)) addTree(x, TREE_OFFSET);
+      }
+      [
+        [INTERSECTION_STOP, INTERSECTION_STOP],
+        [-INTERSECTION_STOP, INTERSECTION_STOP],
+        [-INTERSECTION_STOP, -INTERSECTION_STOP],
+        [INTERSECTION_STOP, -INTERSECTION_STOP],
+      ].forEach(([x, z]) => addTree(x, z));
+
+      const zoneGlows = {
+        residential: [],
+        industrial: [],
+        commercial: [],
+        education: [],
+        healthcare: [],
+        government: [],
+        techPark: [],
+      };
+      const PALETTE = [
+        0x4a5468, 0x505a6c, 0x485268, 0x5a6478, 0x4e5a70, 0x546070,
+      ];
+      const WINDOW_WARM = 0xd4c8a8;
+
+      function makeLabel(text, width, height) {
+        const canvas = document.createElement("canvas");
+        const res = 2;
+        canvas.width = 256 * res;
+        canvas.height = 64 * res;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(res, res);
+        ctx.font = "600 32px system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 2;
+        ctx.fillStyle = "#f0ebe0";
+        ctx.fillText(text, 128, 32);
+        ctx.shadowBlur = 0;
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        const mat = new THREE.MeshBasicMaterial({
+          map: tex,
+          transparent: true,
+          opacity: 0.95,
+          side: THREE.DoubleSide,
+        });
+        const plane = new THREE.Mesh(
+          new THREE.PlaneGeometry(width, height),
+          mat,
+        );
+        return plane;
+      }
+      const labelMeshes = [];
+      function addBuildingLabel(text, x, y, z, w, h) {
+        const label = makeLabel(text, w, h);
+        label.position.set(x, y, z);
+        label.userData.lookAtCamera = true;
+        labelMeshes.push(label);
+        scene.add(label);
+      }
+
+      const buildingMeshes = [];
+      let previousMetrics = { employment: 0, economy: 0 };
+      const BUILDING_EMOJI_OFFSET = 3;
+      const windowTextureCache = new Map();
+      const windowMaterialCache = new Map();
+
+      function getWindowTexture(windowStyle, widthSegments, heightSegments) {
+        const key = `${windowStyle}|${widthSegments}|${heightSegments}`;
+        if (windowTextureCache.has(key)) return windowTextureCache.get(key);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#161a20";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const pad = 12;
+        const cols = Math.max(1, widthSegments);
+        const rows = Math.max(1, heightSegments);
+        const cellW = (canvas.width - pad * 2) / cols;
+        const cellH = (canvas.height - pad * 2) / rows;
+        const litColor = "rgba(214,196,152,0.92)";
+        const dimColor = "rgba(42,50,62,0.88)";
+
+        for (let c = 0; c < cols; c += 1) {
+          for (let r = 0; r < rows; r += 1) {
+            if (windowStyle === "few" && (c + r) % 2 === 0) continue;
+            const chance = windowStyle === "strip" ? 0.85 : 0.68;
+            ctx.fillStyle = Math.random() < chance ? litColor : dimColor;
+            const x = pad + c * cellW + cellW * 0.16;
+            const y = pad + r * cellH + cellH * 0.16;
+            const w = cellW * 0.68;
+            const h = cellH * 0.68;
+            ctx.fillRect(x, y, w, h);
+          }
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        texture.needsUpdate = true;
+        windowTextureCache.set(key, texture);
+        return texture;
+      }
+
+      function getWindowBaseMaterial(windowTexture, emissiveIntensity) {
+        const key = `${windowTexture.uuid}|${emissiveIntensity.toFixed(2)}`;
+        if (windowMaterialCache.has(key)) return windowMaterialCache.get(key);
+        const mat = new THREE.MeshStandardMaterial({
+          map: windowTexture,
+          emissiveMap: windowTexture,
+          emissive: 0x332211,
+          emissiveIntensity,
+          transparent: true,
+          opacity: 0.92,
+        });
+        windowMaterialCache.set(key, mat);
+        return mat;
+      }
+
+      function createWindowLayerForFloor(building, floorMesh) {
+        const data = building.userData;
+        if (!data || !data.windowConfig) return;
+        const cfg = data.windowConfig;
+        const windowGeo = new THREE.BoxGeometry(
+          data.baseWidth,
+          data.floorHeight,
+          data.baseDepth,
+        );
+        const windowMat = cfg.windowMaterial.clone();
+        windowMat.emissiveIntensity = 0.3 + Math.random() * 0.4;
+        const windowMesh = new THREE.Mesh(windowGeo, windowMat);
+        windowMesh.position.copy(floorMesh.position);
+        windowMesh.scale.set(1.01, 1.01, 1.01);
+        building.add(windowMesh);
+        if (!data.windowLayers) data.windowLayers = [];
+        data.windowLayers.push(windowMesh);
+      }
+
+      function updateBuildingEmoji(building) {
+        if (!building || !building.userData || !building.userData.emoji) return;
+        building.userData.emojiTargetY =
+          building.userData.floors * building.userData.floorHeight +
+          (building.userData.emojiOffset || BUILDING_EMOJI_OFFSET);
+      }
+
+      function growOneBuilding(building) {
+        if (!building || !building.userData) return;
+        if (building.userData.hasLabel) return;
+        if (building.userData.floors >= building.userData.maxFloors) return;
+
+        const h = building.userData.floorHeight;
+        const newFloor = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            building.userData.baseWidth,
+            h,
+            building.userData.baseDepth,
+          ),
+          building.userData.material,
+        );
+        newFloor.castShadow = true;
+        newFloor.receiveShadow = true;
+
+        const totalHeight = building.userData.floors * h;
+        newFloor.position.y = totalHeight + h / 2;
+        building.add(newFloor);
+        createWindowLayerForFloor(building, newFloor);
+        building.userData.floors++;
+        updateBuildingEmoji(building);
+
+        console.log("Floor Added");
+      }
+
+      function growRandomBuildings(percent = 0.2) {
+        const eligible = buildingMeshes.filter(
+          (building) =>
+            building &&
+            building.userData &&
+            building.userData.hasLabel !== true &&
+            building.userData.floors < building.userData.maxFloors,
+        );
+        if (!eligible.length) return;
+        const count = Math.max(1, Math.floor(eligible.length * percent));
+        const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+        for (let i = 0; i < count; i += 1) {
+          growOneBuilding(shuffled[i]);
+        }
+      }
+
+      function triggerVerticalGrowthFromMetrics(metrics) {
+        if (!metrics) return;
+        const employment = Number(metrics.employment ?? 0);
+        const economy = Number(metrics.economy ?? 0);
+        if (
+          employment > previousMetrics.employment + 5 ||
+          economy > previousMetrics.economy + 5
+        ) {
+          growRandomBuildings(0.2);
+          previousMetrics = { employment, economy };
+        }
+      }
+
+      function updateWindowActivity(metrics) {
+        const m = metrics || {};
+        const employment = Number(m.employment ?? 50);
+        const economy = Number(m.economy ?? 50);
+        const litBias = Math.max(0, Math.min(1, (employment + economy) / 200));
+        buildingMeshes.forEach((building) => {
+          const layers = building.userData?.windowLayers || [];
+          layers.forEach((layer, idx) => {
+            if (!layer.material) return;
+            const variance = ((idx % 3) - 1) * 0.03;
+            layer.material.emissiveIntensity = Math.max(
+              0.12,
+              Math.min(0.8, 0.2 + litBias * 0.5 + variance),
+            );
+          });
+        });
+      }
+
+      function buildOne(spec) {
+        const {
+          w,
+          h,
+          d,
+          x,
+          z,
+          roofType,
+          windowStyle,
+          colorIdx,
+          roughness,
+          rotY,
+          zoneType = "mixed",
+        } = spec;
+        const col = PALETTE[colorIdx % PALETTE.length];
+        const mat = new THREE.MeshStandardMaterial({
+          color: col,
+          roughness: 0.75 + roughness * 0.2,
+          metalness: 0.03,
+          emissive: 0x202830,
+          emissiveIntensity: 0,
+          side: THREE.DoubleSide,
+        });
+        const buildingGroup = new THREE.Group();
+        buildingGroup.position.set(x, SURFACE, z);
+        if (rotY) buildingGroup.rotation.y = rotY;
+        scene.add(buildingGroup);
+
+        const floorHeight = h;
+        const baseFloor = new THREE.Mesh(
+          new THREE.BoxGeometry(w, floorHeight, d),
+          mat,
+        );
+        baseFloor.position.y = floorHeight / 2;
+        baseFloor.castShadow = true;
+        baseFloor.receiveShadow = true;
+        buildingGroup.add(baseFloor);
+
+        if (roofType === "step") {
+          const step = new THREE.Mesh(
+            new THREE.BoxGeometry(w * 0.88, h * 0.1, d * 0.88),
+            mat,
+          );
+          step.position.set(0, h + 0.05, 0);
+          step.castShadow = true;
+          buildingGroup.add(step);
+        } else if (roofType === "extrusion") {
+          const ext = new THREE.Mesh(
+            new THREE.BoxGeometry(w * 0.4, h * 0.08, d * 0.9),
+            mat,
+          );
+          ext.position.set(0, h + 0.04, 0);
+          buildingGroup.add(ext);
+        }
+
+        const cols =
+          windowStyle === "grid"
+            ? Math.min(4, Math.floor(w / 2.2))
+            : windowStyle === "strip"
+              ? 1
+              : Math.min(2, Math.floor(w / 3));
+        const rows =
+          windowStyle === "grid"
+            ? Math.min(5, Math.floor(h / 2))
+            : windowStyle === "strip"
+              ? Math.min(8, Math.floor(h / 1.2))
+              : Math.min(3, Math.floor(h / 2.5));
+        const windowTexture = getWindowTexture(windowStyle, cols, rows);
+        const baseWindowMaterial = getWindowBaseMaterial(windowTexture, 0.45);
+
+        buildingGroup.userData = {
+          baseWidth: w,
+          baseDepth: d,
+          floorHeight,
+          floors: 1,
+          maxFloors: 10,
+          hasLabel: false,
+          material: mat,
+          zoneType,
+          windowConfig: {
+            windowTexture,
+            emissiveIntensity: 0.45,
+            windowMaterial: baseWindowMaterial,
+            widthSegments: cols,
+            heightSegments: rows,
+          },
+          windowLayers: [],
+        };
+        buildingMeshes.push(buildingGroup);
+        createWindowLayerForFloor(buildingGroup, baseFloor);
+
+        const winMat = new THREE.MeshBasicMaterial({
+          color: WINDOW_WARM,
+          transparent: true,
+          opacity: 0.35,
+        });
+        for (let c = 0; c < cols; c++) {
+          for (let r = 0; r < rows; r++) {
+            if (windowStyle === "few" && (c + r) % 2 === 0) continue;
+            const cw = windowStyle === "strip" ? w * 0.5 : 1.1;
+            const ch = windowStyle === "strip" ? 1.4 : 1.3;
+            const win = new THREE.Mesh(new THREE.PlaneGeometry(cw, ch), winMat);
+            win.position.set(
+              -w / 2 + (c + 0.5) * (w / cols),
+              (r + 0.55) * (h / rows),
+              d / 2 + 0.01,
+            );
+            buildingGroup.add(win);
+          }
+        }
+        return { mat, mesh: buildingGroup };
+      }
+
+      // --- DISTRICT: Front Left — Residential (on grass, setback from road) ---
+      const resSpecs = [
+        {
+          w: 6.5,
+          h: 4,
+          d: 6,
+          x: -28,
+          z: -48,
+          roofType: "flat",
+          windowStyle: "grid",
+          colorIdx: 0,
+          roughness: 0.12,
+        },
+        {
+          w: 6,
+          h: 4.2,
+          d: 5.5,
+          x: -38,
+          z: -46,
+          roofType: "step",
+          windowStyle: "few",
+          colorIdx: 1,
+          roughness: 0.18,
+        },
+        {
+          w: 5.8,
+          h: 3.8,
+          d: 6,
+          x: -46,
+          z: -48,
+          roofType: "flat",
+          windowStyle: "strip",
+          colorIdx: 2,
+          roughness: 0.15,
+        },
+      ];
+      resSpecs.forEach((s) => {
+        zoneGlows.residential.push(buildOne({ ...s, zoneType: "residential" }));
+      });
+      resSpecs.forEach((s) => {
+        grassPatch(s.x, s.z, s.w + BUILDING_GAP * 2, s.d + BUILDING_GAP * 2, 0);
+      });
+
+      // --- DISTRICT: Front Right — Commercial / Offices (on grass, setback) ---
+      const commSpecs = [
+        {
+          w: 8,
+          h: 9,
+          d: 6.5,
+          x: 28,
+          z: -46,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 3,
+          roughness: 0.1,
+        },
+        {
+          w: 7.5,
+          h: 8.5,
+          d: 6,
+          x: 38,
+          z: -48,
+          roofType: "flat",
+          windowStyle: "strip",
+          colorIdx: 4,
+          roughness: 0.14,
+        },
+        {
+          w: 6.5,
+          h: 7.5,
+          d: 5.8,
+          x: 46,
+          z: -46,
+          roofType: "step",
+          windowStyle: "few",
+          colorIdx: 5,
+          roughness: 0.16,
+        },
+      ];
+      commSpecs.forEach((s) => {
+        zoneGlows.commercial.push(buildOne({ ...s, zoneType: "commercial" }));
+      });
+      commSpecs.forEach((s) => {
+        grassPatch(s.x, s.z, s.w + BUILDING_GAP * 2, s.d + BUILDING_GAP * 2, 1);
+      });
+
+      // --- DISTRICT: Mid Left — School + College (on grass, spacing between them) ---
+      const schoolW = 10,
+        schoolH = 5.5,
+        schoolD = 8,
+        schoolX = -30,
+        schoolZ = -24;
+      const schoolMat = new THREE.MeshStandardMaterial({
+        color: 0x708a70,
+        roughness: 0.82,
+        metalness: 0.02,
+        emissive: 0x1a2018,
+        emissiveIntensity: 0,
+      });
+      const schoolBox = new THREE.Mesh(
+        new THREE.BoxGeometry(schoolW, schoolH, schoolD),
+        schoolMat,
+      );
+      schoolBox.position.set(schoolX, SURFACE + schoolH / 2, schoolZ);
+      schoolBox.castShadow = true;
+      schoolBox.receiveShadow = true;
+      scene.add(schoolBox);
+      const schoolRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(schoolW * 0.96, 0.4, schoolD * 0.96),
+        schoolMat,
+      );
+      schoolRoof.position.set(schoolX, SURFACE + schoolH + 0.2, schoolZ);
+      scene.add(schoolRoof);
+      for (let c = 0; c < 3; c++)
+        for (let r = 0; r < 2; r++) {
+          const w = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.4, 1.6),
+            new THREE.MeshBasicMaterial({
+              color: WINDOW_WARM,
+              transparent: true,
+              opacity: 0.4,
+            }),
+          );
+          w.position.set(
+            schoolX - schoolW / 2 + (c + 0.5) * (schoolW / 3),
+            SURFACE + (r + 0.6) * (schoolH / 2.2),
+            schoolZ + schoolD / 2 + 0.01,
+          );
+          scene.add(w);
+        }
+      grassPatch(schoolX, schoolZ - schoolD / 2 - 3, schoolW + 4, 5, 2);
+      zoneGlows.education.push({ mat: schoolMat });
+
+      const collegeW = 14,
+        collegeH = 7.5,
+        collegeD = 10,
+        collegeX = -43,
+        collegeZ = -16;
+      const collegeMat = new THREE.MeshStandardMaterial({
+        color: 0x627a6a,
+        roughness: 0.78,
+        metalness: 0.03,
+        emissive: 0x181c20,
+        emissiveIntensity: 0,
+      });
+      const collegeBox = new THREE.Mesh(
+        new THREE.BoxGeometry(collegeW, collegeH, collegeD),
+        collegeMat,
+      );
+      collegeBox.position.set(collegeX, SURFACE + collegeH / 2, collegeZ);
+      collegeBox.castShadow = true;
+      collegeBox.receiveShadow = true;
+      scene.add(collegeBox);
+      const collegeRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(collegeW * 0.92, 0.5, collegeD * 0.92),
+        collegeMat,
+      );
+      collegeRoof.position.set(collegeX, SURFACE + collegeH + 0.25, collegeZ);
+      scene.add(collegeRoof);
+      [-1, 1].forEach((s) => {
+        const pillar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, collegeH * 0.9, 0.5),
+          collegeMat,
+        );
+        pillar.position.set(
+          collegeX + s * (collegeW / 2 - 0.4),
+          SURFACE + collegeH * 0.45,
+          collegeZ + collegeD / 2 + 0.01,
+        );
+        scene.add(pillar);
+      });
+      for (let c = 0; c < 4; c++)
+        for (let r = 0; r < 3; r++) {
+          const w = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.6, 1.8),
+            new THREE.MeshBasicMaterial({
+              color: WINDOW_WARM,
+              transparent: true,
+              opacity: 0.38,
+            }),
+          );
+          w.position.set(
+            collegeX - collegeW / 2 + (c + 0.5) * (collegeW / 4),
+            SURFACE + (r + 0.55) * (collegeH / 3),
+            collegeZ + collegeD / 2 + 0.01,
+          );
+          scene.add(w);
+        }
+      grassPatch(collegeX, collegeZ - collegeD / 2 - 2, collegeW + 3, 4, 1);
+      zoneGlows.education.push({ mat: collegeMat });
+
+      // --- DISTRICT: Mid Right — Hospital (on grass, well setback) ---
+      const hospW = 18,
+        hospH = 6,
+        hospD = 10,
+        hospX = 40,
+        hospZ = -24;
+      const hospMat = new THREE.MeshStandardMaterial({
+        color: 0xb8b8b2,
+        roughness: 0.65,
+        metalness: 0.05,
+        emissive: 0x202020,
+        emissiveIntensity: 0,
+      });
+      const hospBox = new THREE.Mesh(
+        new THREE.BoxGeometry(hospW, hospH, hospD),
+        hospMat,
+      );
+      hospBox.position.set(hospX, SURFACE + hospH / 2, hospZ);
+      hospBox.castShadow = true;
+      hospBox.receiveShadow = true;
+      scene.add(hospBox);
+      const hospRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(hospW * 0.98, 0.35, hospD * 0.98),
+        hospMat,
+      );
+      hospRoof.position.set(hospX, SURFACE + hospH + 0.18, hospZ);
+      scene.add(hospRoof);
+      const redAccent = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, hospH * 0.7, hospD + 0.1),
+        new THREE.MeshBasicMaterial({ color: 0xb03030 }),
+      );
+      redAccent.position.set(
+        hospX - hospW / 2 - 0.05,
+        SURFACE + hospH * 0.35,
+        hospZ,
+      );
+      scene.add(redAccent);
+      const crossW = 2.2,
+        crossH = 3.2;
+      const crossMat = new THREE.MeshBasicMaterial({ color: 0xc04040 });
+      const crossV = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, crossH, 0.15),
+        crossMat,
+      );
+      crossV.position.set(
+        hospX,
+        SURFACE + hospH - 1.2,
+        hospZ + hospD / 2 + 0.08,
+      );
+      scene.add(crossV);
+      const crossH_bar = new THREE.Mesh(
+        new THREE.BoxGeometry(crossW, 0.5, 0.15),
+        crossMat,
+      );
+      crossH_bar.position.set(
+        hospX,
+        SURFACE + hospH - 1.2,
+        hospZ + hospD / 2 + 0.08,
+      );
+      scene.add(crossH_bar);
+      const ambMark = new THREE.Mesh(
+        new THREE.PlaneGeometry(4, 2.2),
+        new THREE.MeshBasicMaterial({
+          color: 0x303030,
+          side: THREE.DoubleSide,
+        }),
+      );
+      ambMark.rotation.x = -Math.PI / 2;
+      ambMark.position.set(hospX, SURFACE + 0.02, hospZ - hospD / 2 - 2.5);
+      scene.add(ambMark);
+      for (let c = 0; c < 5; c++)
+        for (let r = 0; r < 2; r++) {
+          const w = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 1.6),
+            new THREE.MeshBasicMaterial({
+              color: WINDOW_WARM,
+              transparent: true,
+              opacity: 0.35,
+            }),
+          );
+          w.position.set(
+            hospX - hospW / 2 + (c + 0.5) * (hospW / 5),
+            SURFACE + (r + 0.6) * (hospH / 2.2),
+            hospZ + hospD / 2 + 0.01,
+          );
+          scene.add(w);
+        }
+      grassPatch(hospX, hospZ - hospD / 2 - 4, hospW + 4, 5, 0);
+      zoneGlows.healthcare.push({ mat: hospMat });
+
+      // --- DISTRICT: Back Center — Government HQ ---
+      const govCol = 0x2a2848;
+      const govMat = new THREE.MeshStandardMaterial({
+        color: govCol,
+        roughness: 0.7,
+        metalness: 0.05,
+        emissive: 0x2a2040,
+        emissiveIntensity: 0.04,
+      });
+      const govZ = 0;
+      const govBox = new THREE.Mesh(new THREE.BoxGeometry(10, 22, 8.5), govMat);
+      govBox.position.set(0, SURFACE + 11, govZ);
+      govBox.castShadow = true;
+      govBox.receiveShadow = true;
+      scene.add(govBox);
+      const govStep = new THREE.Mesh(
+        new THREE.BoxGeometry(9.2, 1.2, 7.8),
+        govMat,
+      );
+      govStep.position.set(0, SURFACE + 22.6, govZ);
+      scene.add(govStep);
+      const accentLineMat = new THREE.MeshBasicMaterial({ color: 0x5c4a8a });
+      [-1, 1].forEach((s) => {
+        const line = new THREE.Mesh(
+          new THREE.BoxGeometry(0.15, 20, 0.15),
+          accentLineMat,
+        );
+        line.position.set(s * 4.8, SURFACE + 10, govZ + 4.3);
+        scene.add(line);
+      });
+      zoneGlows.government.push({ mat: govMat });
+
+      // --- DISTRICT: Back Left — Industrial (on grass, setback) ---
+      const indW = 14,
+        indH = 6,
+        indD = 12,
+        indX = -44,
+        indZ = 32;
+      const indMat = new THREE.MeshStandardMaterial({
+        color: 0x404840,
+        roughness: 0.85,
+        metalness: 0.02,
+        emissive: 0x181a18,
+        emissiveIntensity: 0,
+      });
+      const indBox = new THREE.Mesh(
+        new THREE.BoxGeometry(indW, indH, indD),
+        indMat,
+      );
+      indBox.position.set(indX, SURFACE + indH / 2, indZ);
+      indBox.castShadow = true;
+      indBox.receiveShadow = true;
+      scene.add(indBox);
+      const indRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(indW, 0.3, indD),
+        indMat,
+      );
+      indRoof.position.set(indX, SURFACE + indH + 0.15, indZ);
+      scene.add(indRoof);
+      const chimneyMat = new THREE.MeshStandardMaterial({ color: 0x585858 });
+      [1, -1].forEach((s, i) => {
+        const ch = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.8, 0.9, 4, 8),
+          chimneyMat,
+        );
+        ch.position.set(
+          indX + s * (indW / 2 - 1.5),
+          SURFACE + indH + 2.2,
+          indZ + (i === 0 ? 2 : -2),
+        );
+        ch.castShadow = true;
+        scene.add(ch);
+      });
+      for (let c = 0; c < 3; c++)
+        for (let r = 0; r < 2; r++) {
+          const w = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 1.8),
+            new THREE.MeshBasicMaterial({
+              color: 0x606050,
+              transparent: true,
+              opacity: 0.3,
+            }),
+          );
+          w.position.set(
+            indX - indW / 2 + (c + 0.5) * (indW / 3),
+            SURFACE + (r + 0.6) * (indH / 2.2),
+            indZ + indD / 2 + 0.01,
+          );
+          scene.add(w);
+        }
+      grassPatch(indX, indZ, indW + 3, indD + 3, 2);
+      zoneGlows.industrial.push({ mat: indMat });
+
+      // --- DISTRICT: Back Right — Tech Park (on grass, clear spacing from other buildings) ---
+      const techW = 12,
+        techH = 8,
+        techD = 10,
+        techX = 46,
+        techZ = 36;
+      const techMat = new THREE.MeshStandardMaterial({
+        color: 0x607070,
+        roughness: 0.35,
+        metalness: 0.25,
+        emissive: 0x0a2028,
+        emissiveIntensity: 0,
+      });
+      const techBox = new THREE.Mesh(
+        new THREE.BoxGeometry(techW, techH, techD),
+        techMat,
+      );
+      techBox.position.set(techX, SURFACE + techH / 2, techZ);
+      techBox.castShadow = true;
+      techBox.receiveShadow = true;
+      scene.add(techBox);
+      const techRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(techW * 0.98, 0.3, techD * 0.98),
+        techMat,
+      );
+      techRoof.position.set(techX, SURFACE + techH + 0.15, techZ);
+      scene.add(techRoof);
+      const techAccent = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, techH * 0.85, techD + 0.05),
+        new THREE.MeshBasicMaterial({ color: 0x2a9080 }),
+      );
+      techAccent.position.set(
+        techX + techW / 2 + 0.05,
+        SURFACE + techH * 0.42,
+        techZ,
+      );
+      scene.add(techAccent);
+      for (let c = 0; c < 4; c++)
+        for (let r = 0; r < 3; r++) {
+          const w = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.8, 1.8),
+            new THREE.MeshBasicMaterial({
+              color: 0xa0c0d0,
+              transparent: true,
+              opacity: 0.5,
+            }),
+          );
+          w.position.set(
+            techX - techW / 2 + (c + 0.5) * (techW / 4),
+            SURFACE + (r + 0.55) * (techH / 3),
+            techZ + techD / 2 + 0.01,
+          );
+          scene.add(w);
+        }
+      grassPatch(techX, techZ, techW + 3, techD + 3, 1);
+      zoneGlows.techPark.push({ mat: techMat });
+
+      // --- Gap between Industry & Tech Park: 3 offices (spaced apart, clear of Tech Park) ---
+      const gapOfficeSpecs = [
+        {
+          w: 6,
+          h: 5.5,
+          d: 6,
+          x: -16,
+          z: 32,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 3,
+          roughness: 0.1,
+        },
+        {
+          w: 6,
+          h: 6,
+          d: 6,
+          x: 14,
+          z: 32,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 4,
+          roughness: 0.12,
+        },
+        {
+          w: 6,
+          h: 5.5,
+          d: 6,
+          x: 28,
+          z: 32,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 5,
+          roughness: 0.1,
+        },
+      ];
+      gapOfficeSpecs.forEach((s) =>
+        zoneGlows.commercial.push(buildOne({ ...s, zoneType: "commercial" })),
+      );
+      gapOfficeSpecs.forEach((s) =>
+        grassPatch(s.x, s.z, s.w + BUILDING_GAP * 2, s.d + BUILDING_GAP * 2, 1),
+      );
+
+      grassPatch(0, govZ, 14, 12, 0);
+
+      // --- Fill-in buildings (gaps, proper spacing, palette) ---
+      const fillSpecs = [
+        {
+          w: 5.5,
+          h: 3.8,
+          d: 5.2,
+          x: -24,
+          z: -40,
+          roofType: "flat",
+          windowStyle: "grid",
+          colorIdx: 0,
+          roughness: 0.14,
+        },
+        {
+          w: 5,
+          h: 4,
+          d: 5,
+          x: -14,
+          z: -38,
+          roofType: "step",
+          windowStyle: "few",
+          colorIdx: 1,
+          roughness: 0.18,
+        },
+        {
+          w: 6,
+          h: 5.5,
+          d: 5.5,
+          x: 20,
+          z: -36,
+          roofType: "flat",
+          windowStyle: "strip",
+          colorIdx: 3,
+          roughness: 0.12,
+        },
+        {
+          w: 5.5,
+          h: 4.5,
+          d: 5.2,
+          x: 32,
+          z: -34,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 4,
+          roughness: 0.15,
+        },
+        {
+          w: 6.5,
+          h: 5,
+          d: 6,
+          x: -42,
+          z: 14,
+          roofType: "flat",
+          windowStyle: "few",
+          colorIdx: 2,
+          roughness: 0.16,
+        },
+        {
+          w: 6,
+          h: 5.5,
+          d: 5.8,
+          x: 32,
+          z: 12,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 5,
+          roughness: 0.1,
+        },
+        {
+          w: 6,
+          h: 5,
+          d: 5.5,
+          x: -30,
+          z: 22,
+          roofType: "flat",
+          windowStyle: "strip",
+          colorIdx: 0,
+          roughness: 0.2,
+        },
+        {
+          w: 6,
+          h: 5.5,
+          d: 5.5,
+          x: 28,
+          z: 22,
+          roofType: "step",
+          windowStyle: "few",
+          colorIdx: 1,
+          roughness: 0.14,
+        },
+        {
+          w: 3.5,
+          h: 3,
+          d: 4,
+          x: -26,
+          z: -32,
+          roofType: "flat",
+          windowStyle: "grid",
+          colorIdx: 2,
+          roughness: 0.18,
+        },
+        {
+          w: 5.5,
+          h: 4.2,
+          d: 5,
+          x: 20,
+          z: -14,
+          roofType: "step",
+          windowStyle: "few",
+          colorIdx: 4,
+          roughness: 0.12,
+        },
+      ];
+      fillSpecs.forEach((s, i) => {
+        let zoneType = "commercial";
+        if (i <= 1 || i === 6 || i === 8) zoneType = "residential";
+        else if (i === 4) zoneType = "education";
+        const o = buildOne({ ...s, zoneType });
+        if (i <= 1 || i === 6 || i === 8) zoneGlows.residential.push(o);
+        else if (i === 4) zoneGlows.education.push(o);
+        else zoneGlows.commercial.push(o);
+      });
+      fillSpecs.forEach((s) => {
+        grassPatch(
+          s.x,
+          s.z,
+          s.w + BUILDING_GAP * 2,
+          s.d + BUILDING_GAP * 2,
+          s.x < 0 ? 0 : 1,
+        );
+      });
+
+      // --- More buildings on grass only (no road touch, spacing between all) ---
+      const extraSpecs = [
+        {
+          w: 5,
+          h: 3.5,
+          d: 5,
+          x: -22,
+          z: -42,
+          roofType: "flat",
+          windowStyle: "grid",
+          colorIdx: 0,
+          roughness: 0.16,
+        },
+        {
+          w: 5.5,
+          h: 4,
+          d: 5.2,
+          x: 24,
+          z: -42,
+          roofType: "step",
+          windowStyle: "few",
+          colorIdx: 3,
+          roughness: 0.14,
+        },
+        {
+          w: 4.5,
+          h: 3.8,
+          d: 4.8,
+          x: -36,
+          z: -20,
+          roofType: "flat",
+          windowStyle: "grid",
+          colorIdx: 2,
+          roughness: 0.18,
+        },
+        {
+          w: 5,
+          h: 4.2,
+          d: 5,
+          x: 26,
+          z: -28,
+          roofType: "step",
+          windowStyle: "strip",
+          colorIdx: 4,
+          roughness: 0.12,
+        },
+        {
+          w: 5.5,
+          h: 4.5,
+          d: 5.5,
+          x: -36,
+          z: 26,
+          roofType: "flat",
+          windowStyle: "few",
+          colorIdx: 1,
+          roughness: 0.2,
+        },
+        {
+          w: 5.5,
+          h: 4.5,
+          d: 5.5,
+          x: 30,
+          z: 24,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 5,
+          roughness: 0.1,
+        },
+        {
+          w: 5,
+          h: 3.8,
+          d: 5,
+          x: -18,
+          z: -34,
+          roofType: "flat",
+          windowStyle: "few",
+          colorIdx: 0,
+          roughness: 0.18,
+        },
+        {
+          w: 5,
+          h: 4,
+          d: 5,
+          x: 22,
+          z: -20,
+          roofType: "step",
+          windowStyle: "grid",
+          colorIdx: 4,
+          roughness: 0.14,
+        },
+      ];
+      extraSpecs.forEach((s) => {
+        zoneGlows.commercial.push(buildOne({ ...s, zoneType: "commercial" }));
+        grassPatch(
+          s.x,
+          s.z,
+          s.w + BUILDING_GAP * 2,
+          s.d + BUILDING_GAP * 2,
+          s.x < 0 ? 0 : 1,
+        );
+      });
+
+      growOneBuilding(buildingMeshes[0]);
+
+      // --- Building labels (floating, readable) ---
+      addBuildingLabel(
+        "SCHOOL",
+        schoolX,
+        SURFACE + schoolH + 1.2,
+        schoolZ + schoolD / 2 + 0.5,
+        8,
+        1.4,
+      );
+      addBuildingLabel(
+        "COLLEGE",
+        collegeX,
+        SURFACE + collegeH + 1.4,
+        collegeZ + collegeD / 2 + 0.5,
+        10,
+        1.5,
+      );
+      addBuildingLabel(
+        "HOSPITAL",
+        hospX,
+        SURFACE + hospH + 1.2,
+        hospZ + hospD / 2 + 0.5,
+        12,
+        1.5,
+      );
+      addBuildingLabel("GOVERNMENT HQ", 0, SURFACE + 23.5, govZ + 4.5, 14, 1.6);
+      addBuildingLabel(
+        "INDUSTRY",
+        indX,
+        SURFACE + indH + 1.2,
+        indZ + indD / 2 + 0.5,
+        10,
+        1.4,
+      );
+      addBuildingLabel(
+        "TECH PARK",
+        techX,
+        SURFACE + techH + 1.2,
+        techZ + techD / 2 + 0.5,
+        10,
+        1.4,
+      );
+
+      // --- ADD: Public Park (near Tech Park, on grass only) ---
+      const parkCX = 52,
+        parkCZ = 44,
+        parkW = 16,
+        parkD = 12;
+      const parkGrassMat = new THREE.MeshStandardMaterial({
+        color: 0x4a5a4a,
+        roughness: 0.98,
+        metalness: 0,
+      });
+      const parkGrass = new THREE.Mesh(
+        new THREE.PlaneGeometry(parkW, parkD),
+        parkGrassMat,
+      );
+      parkGrass.rotation.x = -Math.PI / 2;
+      parkGrass.position.set(parkCX, SURFACE + 0.022, parkCZ);
+      scene.add(parkGrass);
+      const parkBorderMat = new THREE.MeshStandardMaterial({ color: 0x3a4a3a });
+      [
+        [parkW / 2, 0, 0.15, parkD + 0.2],
+        [-parkW / 2, 0, 0.15, parkD + 0.2],
+        [0, parkD / 2, parkW + 0.2, 0.15],
+        [0, -parkD / 2, parkW + 0.2, 0.15],
+      ].forEach(([dx, dz, bw, bd]) => {
+        const b = new THREE.Mesh(
+          new THREE.BoxGeometry(bw, 0.08, bd),
+          parkBorderMat,
+        );
+        b.position.set(parkCX + dx, SURFACE + 0.06, parkCZ + dz);
+        scene.add(b);
+      });
+      const pathMat = new THREE.MeshStandardMaterial({
+        color: 0x9a9288,
+        roughness: 0.9,
+      });
+      [
+        [parkCX, parkCZ - parkD / 2 + 1.5, parkW - 3, 1.2],
+        [parkCX, parkCZ + parkD / 2 - 1.5, parkW - 3, 1.2],
+        [parkCX - parkW / 2 + 1.5, parkCZ, 1.2, parkD - 3],
+        [parkCX + parkW / 2 - 1.5, parkCZ, 1.2, parkD - 3],
+      ].forEach(([cx, cz, pw, pd]) => {
+        const p = new THREE.Mesh(new THREE.PlaneGeometry(pw, pd), pathMat);
+        p.rotation.x = -Math.PI / 2;
+        p.position.set(cx, SURFACE + 0.028, cz);
+        scene.add(p);
+      });
+      const benchSeat = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.12, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x5c4a3a }),
+      );
+      benchSeat.position.set(parkCX + 4, SURFACE + 0.4, parkCZ - 3);
+      scene.add(benchSeat);
+      const benchBack = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.6, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x5c4a3a }),
+      );
+      benchBack.position.set(parkCX + 4, SURFACE + 0.7, parkCZ - 3.22);
+      scene.add(benchBack);
+
+      // --- ADD: Police Station (on grass, clear of road) ---
+      const policeW = 7,
+        policeH = 5.5,
+        policeD = 6,
+        policeX = -22,
+        policeZ = 14;
+      const policeMat = new THREE.MeshStandardMaterial({
+        color: 0x6a6e78,
+        roughness: 0.78,
+        metalness: 0.03,
+      });
+      const policeBox = new THREE.Mesh(
+        new THREE.BoxGeometry(policeW, policeH, policeD),
+        policeMat,
+      );
+      policeBox.position.set(policeX, SURFACE + policeH / 2, policeZ);
+      policeBox.castShadow = true;
+      policeBox.receiveShadow = true;
+      scene.add(policeBox);
+      const policeRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(policeW * 0.96, 0.35, policeD * 0.96),
+        policeMat,
+      );
+      policeRoof.position.set(policeX, SURFACE + policeH + 0.18, policeZ);
+      scene.add(policeRoof);
+      const policeBlue = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, policeH * 0.75, policeD + 0.05),
+        new THREE.MeshBasicMaterial({ color: 0x3050a0 }),
+      );
+      policeBlue.position.set(
+        policeX - policeW / 2 - 0.04,
+        SURFACE + policeH * 0.4,
+        policeZ,
+      );
+      scene.add(policeBlue);
+      for (let c = 0; c < 2; c++)
+        for (let r = 0; r < 2; r++) {
+          const w = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.2, 1.4),
+            new THREE.MeshBasicMaterial({
+              color: WINDOW_WARM,
+              transparent: true,
+              opacity: 0.36,
+            }),
+          );
+          w.position.set(
+            policeX - policeW / 2 + (c + 0.5) * (policeW / 2),
+            SURFACE + (r + 0.55) * (policeH / 2),
+            policeZ + policeD / 2 + 0.01,
+          );
+          scene.add(w);
+        }
+      grassPatch(
+        policeX,
+        policeZ,
+        policeW + BUILDING_GAP * 2,
+        policeD + BUILDING_GAP * 2,
+        0,
+      );
+      addBuildingLabel(
+        "POLICE",
+        policeX,
+        SURFACE + policeH + 1,
+        policeZ + policeD / 2 + 0.4,
+        6,
+        1.2,
+      );
+
+      // --- ADD: Fire Station (on grass near intersection, no road overlap) ---
+      const fireW = 10,
+        fireH = 5,
+        fireD = 8,
+        fireX = 20,
+        fireZ = 14;
+      const fireMat = new THREE.MeshStandardMaterial({
+        color: 0x787470,
+        roughness: 0.8,
+        metalness: 0.02,
+      });
+      const fireBox = new THREE.Mesh(
+        new THREE.BoxGeometry(fireW, fireH, fireD),
+        fireMat,
+      );
+      fireBox.position.set(fireX, SURFACE + fireH / 2, fireZ);
+      fireBox.castShadow = true;
+      fireBox.receiveShadow = true;
+      scene.add(fireBox);
+      const fireRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(fireW * 0.98, 0.3, fireD * 0.98),
+        fireMat,
+      );
+      fireRoof.position.set(fireX, SURFACE + fireH + 0.15, fireZ);
+      scene.add(fireRoof);
+      const fireRed = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, fireH * 0.7, fireD + 0.05),
+        new THREE.MeshBasicMaterial({ color: 0xb83838 }),
+      );
+      fireRed.position.set(
+        fireX + fireW / 2 + 0.04,
+        SURFACE + fireH * 0.35,
+        fireZ,
+      );
+      scene.add(fireRed);
+      const garageMat = new THREE.MeshStandardMaterial({ color: 0x505458 });
+      const garageDoor = new THREE.Mesh(
+        new THREE.PlaneGeometry(fireW * 0.7, fireH * 0.65),
+        garageMat,
+      );
+      garageDoor.position.set(
+        fireX,
+        SURFACE + fireH * 0.35,
+        fireZ - fireD / 2 - 0.02,
+      );
+      garageDoor.rotation.y = Math.PI;
+      scene.add(garageDoor);
+      grassPatch(
+        fireX,
+        fireZ,
+        fireW + BUILDING_GAP * 2,
+        fireD + BUILDING_GAP * 2,
+        1,
+      );
+      addBuildingLabel(
+        "FIRE STATION",
+        fireX,
+        SURFACE + fireH + 1,
+        fireZ + fireD / 2 + 0.4,
+        9,
+        1.3,
+      );
+
+      // --- ADD: Small Commercial Market (on grass, near residential) ---
+      const marketSpecs = [
+        { w: 4.5, h: 3.2, d: 5, x: -34, z: -54 },
+        { w: 4, h: 3, d: 4.5, x: -40, z: -53 },
+        { w: 4.2, h: 3.4, d: 4.8, x: -46, z: -54 },
+      ];
+      const marketMatBase = {
+        color: 0x8a7a6a,
+        roughness: 0.82,
+        metalness: 0.02,
+      };
+      marketSpecs.forEach(({ w, h, d, x, z }) => {
+        const mat = new THREE.MeshStandardMaterial(marketMatBase);
+        const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+        box.position.set(x, SURFACE + h / 2, z);
+        box.castShadow = true;
+        box.receiveShadow = true;
+        scene.add(box);
+        const roof = new THREE.Mesh(
+          new THREE.BoxGeometry(w * 0.96, 0.2, d * 0.96),
+          mat,
+        );
+        roof.position.set(x, SURFACE + h + 0.1, z);
+        scene.add(roof);
+        const win = new THREE.Mesh(
+          new THREE.PlaneGeometry(1, 1.2),
+          new THREE.MeshBasicMaterial({
+            color: WINDOW_WARM,
+            transparent: true,
+            opacity: 0.4,
+          }),
+        );
+        win.position.set(x, SURFACE + h * 0.6, z + d / 2 + 0.01);
+        scene.add(win);
+        grassPatch(x, z, w + BUILDING_GAP * 2, d + BUILDING_GAP * 2, 0);
+      });
+      addBuildingLabel("MARKET", -40, SURFACE + 4.2, -58, 8, 1.2);
+
+      // --- ADD: Civic Plaza (in front of Government HQ) ---
+      const plazaW = 14,
+        plazaD = 8;
+      const plazaMat = new THREE.MeshStandardMaterial({
+        color: 0xd8d4cc,
+        roughness: 0.88,
+      });
+      const plaza = new THREE.Mesh(
+        new THREE.PlaneGeometry(plazaW, plazaD),
+        plazaMat,
+      );
+      plaza.rotation.x = -Math.PI / 2;
+      plaza.position.set(0, SURFACE + 0.026, -10);
+      scene.add(plaza);
+      const beamGeo = new THREE.CylinderGeometry(0.5, 0.9, 26, 6);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: 0x6d28d9,
+        transparent: true,
+        opacity: 0.1,
+      });
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(0, 25, govZ);
+      scene.add(beam);
+      const baseGlowMat = new THREE.MeshBasicMaterial({
+        color: 0x4c1d95,
+        transparent: true,
+        opacity: 0.06,
+      });
+      const baseGlow = new THREE.Mesh(
+        new THREE.CylinderGeometry(6, 7, 0.2, 12),
+        baseGlowMat,
+      );
+      baseGlow.position.set(0, SURFACE + 0.1, govZ);
+      scene.add(baseGlow);
+
+      scene.add(new THREE.AmbientLight(0x8090a0, 0.5));
+      const sunLight = new THREE.DirectionalLight(0xf0e8d8, 1.2);
+      sunLight.position.set(55, 45, 50);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 1024;
+      sunLight.shadow.mapSize.height = 1024;
+      sunLight.shadow.camera.near = 10;
+      sunLight.shadow.camera.far = 250;
+      sunLight.shadow.camera.left = -70;
+      sunLight.shadow.camera.right = 70;
+      sunLight.shadow.camera.top = 70;
+      sunLight.shadow.camera.bottom = -70;
+      sunLight.shadow.bias = -0.0002;
+      scene.add(sunLight);
+      const fillLight = new THREE.DirectionalLight(0xa0b0c0, 0.35);
+      fillLight.position.set(-40, 25, 30);
+      scene.add(fillLight);
+
+      const metricToZone = {
+        publicHappiness: "residential",
+        employment: "industrial",
+        economy: "commercial",
+        inequality: "education",
+        governmentBudget: "government",
+      };
+
+      // ============================================================================
+      // LIVE CITIZEN REACTION SYSTEM
+      // ============================================================================
+      const EmojiSpriteFactory = (function () {
+        const textureCache = {};
+        const SIZE = 64;
+        function createEmojiTexture(emoji) {
+          if (textureCache[emoji]) return textureCache[emoji];
+          const canvas = document.createElement("canvas");
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "rgba(255,255,255,0.85)";
+          ctx.font = `${SIZE * 0.7}px "Apple Color Emoji","Segoe UI Emoji",sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(emoji, SIZE / 2, SIZE / 2);
+          const tex = new THREE.CanvasTexture(canvas);
+          tex.needsUpdate = true;
+          textureCache[emoji] = tex;
+          return tex;
+        }
+        return {
+          createSprite(emoji, scale = 2.5) {
+            const map = createEmojiTexture(emoji);
+            const mat = new THREE.SpriteMaterial({
+              map,
+              transparent: true,
+              opacity: 0.95,
+            });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(scale, scale, 1);
+            sprite.userData = { emoji, baseScale: scale };
+            return sprite;
+          },
+          updateSprite(sprite, emoji) {
+            if (sprite.userData.emoji === emoji) return false;
+            sprite.userData.emoji = emoji;
+            sprite.material.map = createEmojiTexture(emoji);
+            sprite.material.needsUpdate = true;
+            return true;
+          },
+        };
+      })();
+
+      // --- EMOJI MAPPING: metric → emoji by value (contextual, readable) ---
+      function metricToEmoji(metricKey, val, stabilityBoost) {
+        const v = val != null ? val : 50;
+        let emoji = "😐";
+        switch (metricKey) {
+          case "employment":
+            if (v <= 30) emoji = "😡";
+            else if (v <= 60) emoji = "😟";
+            else if (v <= 80) emoji = "🙂";
+            else emoji = "😄";
+            break;
+          case "economy":
+            if (v < 40) emoji = "📉";
+            else if (v < 70) emoji = "💰";
+            else emoji = "📈";
+            break;
+          case "publicHappiness":
+            if (v < 40) emoji = "😢";
+            else if (v < 70) emoji = "😐";
+            else emoji = "❤️";
+            break;
+          case "inequality":
+            if (v >= 70) emoji = "⚠️";
+            else if (v >= 40) emoji = "🤝";
+            else emoji = "🌍";
+            break;
+          case "governmentBudget":
+            if (v < 40) emoji = "💸";
+            else if (v < 70) emoji = "🪙";
+            else emoji = "🏦";
+            break;
+        }
+        if (stabilityBoost && (emoji === "😐" || emoji === "😟")) emoji = "🙂";
+        return emoji;
+      }
+
+      function getMetricForBuildingType(type) {
+        const MAP = {
+          industrial: "employment",
+          healthcare: "publicHappiness",
+          education: "inequality",
+          market: "economy",
+          government: "governmentBudget",
+          residential: "publicHappiness",
+          commercial: "economy",
+          tech: "economy",
+          police: "governmentBudget",
+          fire: "governmentBudget",
+        };
+        return MAP[type] || "publicHappiness";
+      }
+
+      function isCityStable(metrics) {
+        const m = metrics || {};
+        const vals = [
+          m.employment,
+          m.economy,
+          m.publicHappiness,
+          m.governmentBudget,
+        ].filter((v) => v != null);
+        if (vals.length === 0) return false;
+        const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+        return avg >= 60 && (m.inequality == null || m.inequality <= 60);
+      }
+
+      let citizenReactions = [];
+      const MetricReactionManager = (function () {
+        let lastMetricHash = "";
+
+        function attachEmojiToBuilding(building) {
+          if (!building || !building.userData || building.userData.hasLabel)
+            return;
+          if (building.userData.emoji) return;
+          const metricKey = getMetricForBuildingType(
+            building.userData.zoneType || "residential",
+          );
+          const sprite = EmojiSpriteFactory.createSprite("😐", 2.0);
+          sprite.userData.metricKey = metricKey;
+          sprite.userData.baseScale = 2.0;
+          building.userData.emoji = sprite;
+          building.userData.emojiOffset = BUILDING_EMOJI_OFFSET;
+          building.userData.emojiTargetY =
+            building.userData.floors * building.userData.floorHeight +
+            BUILDING_EMOJI_OFFSET;
+          sprite.position.set(0, building.userData.emojiTargetY, 0);
+          building.add(sprite);
+          citizenReactions.push({ building, metricKey, sprite });
+        }
+
+        function init() {
+          buildingMeshes.forEach((building) => attachEmojiToBuilding(building));
+        }
+
+        function metricHash(m) {
+          return [
+            m.employment,
+            m.economy,
+            m.publicHappiness,
+            m.inequality,
+            m.governmentBudget,
+          ].join(",");
+        }
+
+        function update(metrics) {
+          const h = metricHash(metrics || {});
+          const changed = h !== lastMetricHash;
+          lastMetricHash = h;
+          const stable = isCityStable(metrics);
+          citizenReactions.forEach((r) => {
+            const val = metrics ? metrics[r.metricKey] : 50;
+            const emoji = metricToEmoji(r.metricKey, val, stable);
+            EmojiSpriteFactory.updateSprite(r.sprite, emoji);
+          });
+          return { changed };
+        }
+
+        init();
+        return { update };
+      })();
+
+      function updateCitizenMood(metrics, t) {
+        MetricReactionManager.update(metrics);
+        citizenReactions.forEach((r, i) => {
+          const b = r.building;
+          const s = r.sprite;
+          const targetY =
+            (b && b.userData ? b.userData.emojiTargetY : s.position.y) +
+            Math.sin(t * 1.0 + i * 0.5) * 0.12;
+          s.position.y = THREE.MathUtils.lerp(s.position.y, targetY, 0.08);
+          s.lookAt(camera.position);
+          const scale =
+            (s.userData.baseScale || 2.0) * (0.96 + Math.sin(t * 1.5) * 0.04);
+          s.scale.setScalar(scale);
+        });
+      }
+
+      let rafId = null;
+      function tick() {
+        rafId = requestAnimationFrame(tick);
+        controls.update();
+        const t = performance.now() * 0.001;
+        beamMat.opacity = 0.08 + Math.sin(t * 0.5) * 0.025;
+        baseGlowMat.opacity = 0.05 + Math.sin(t * 0.4) * 0.02;
+        const m = gameState.metrics || {};
+        triggerVerticalGrowthFromMetrics(m);
+        updateWindowActivity(m);
+        const glow = (val) => 0.01 + (val != null ? (val / 100) * 0.12 : 0.04);
+        [
+          "residential",
+          "industrial",
+          "commercial",
+          "education",
+          "government",
+          "techPark",
+        ].forEach((zone) => {
+          const key = Object.keys(metricToZone).find(
+            (k) => metricToZone[k] === zone,
+          );
+          let val = key ? m[key] : 50;
+          if (zone === "education") val = val != null ? 100 - val : 50;
+          if (zone === "techPark") val = m.economy != null ? m.economy : 50;
+          zoneGlows[zone].forEach((o) => {
+            if (o.mat) o.mat.emissiveIntensity = Math.min(0.15, glow(val));
+          });
+        });
+        zoneGlows.healthcare.forEach((o) => {
+          if (o.mat)
+            o.mat.emissiveIntensity = Math.min(
+              0.15,
+              glow(m.publicHappiness != null ? m.publicHappiness : 50),
+            );
+        });
+        labelMeshes.forEach((mesh) => {
+          if (mesh.userData.lookAtCamera) mesh.lookAt(camera.position);
+        });
+        updateCitizenMood(m, t);
+        renderer.render(scene, camera);
+      }
+      tick();
+
+      document.getElementById("back-btn").addEventListener("click", () => {
+        if (rafId != null) cancelAnimationFrame(rafId);
+        if (renderer) {
+          renderer.dispose();
+          const canvas = renderer.domElement;
+          if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas);
+        }
+        window.location.href = "/";
+      });
+
+      window.addEventListener("resize", () => {
+        camera.aspect = cityEl.clientWidth / cityEl.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(cityEl.clientWidth, cityEl.clientHeight);
+      });
+    </script>
+  </body>
+</html>

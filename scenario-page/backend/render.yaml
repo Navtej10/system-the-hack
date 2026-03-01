@@ -1,0 +1,14 @@
+# Render Blueprint for Scenario API Backend
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: scenario-api
+    runtime: node
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: FRONTEND_URL
+        sync: false  # Your Vercel URL, e.g. https://your-app.vercel.app

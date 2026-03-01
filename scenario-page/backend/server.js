@@ -6,7 +6,13 @@ import OpenAI from 'openai';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// Allow requests from your frontend. Set FRONTEND_URL in Render env vars.
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://system-the-hack-lsln.vercel.app";
+app.use(cors({
+  origin: FRONTEND_URL,
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 app.use(express.json());
 
 /* ===============================
