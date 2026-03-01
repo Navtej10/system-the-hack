@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGameStore } from '../store/gameStore';
 
 export const AIAssistantWidget = () => {
   const [open, setOpen] = useState(false);
@@ -7,17 +8,48 @@ export const AIAssistantWidget = () => {
   const [messages, setMessages] = useState([
     { role: 'ai', text: 'Governance Advisor online. I can analyze your current simulation state, suggest policies, or explain systemic ripple effects. What do you need?' }
   ]);
+  const { currentState } = useGameStore();
+  const { metrics, turn } = currentState;
 
-  const send = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
     const userMsg = input.trim();
     setInput('');
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', text: userMsg },
-      { role: 'ai', text: 'The AI Advisor is analyzing your current simulation context. In a live session, this would provide strategic guidance based on your turn state, metric values, and remaining policy options.' }
-    ]);
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey) {
+      setMessages(prev => [...prev, { role: 'ai', text: "VITE_GROQ_API_KEY is not configured. Please add it to your environment." }]);
+      return;
+    }
+
+    const constructedPrompt = `Turn ${turn}/10. Current metrics: ${JSON.stringify(metrics)}\n\nUser question: ${userMsg}\n\nGive a 2-4 sentence strategic advisory response.`;
+
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: 'You are a strategic governance policy advisor.' },
+            { role: 'user', content: constructedPrompt }
+          ],
+          temperature: 0.6
+        })
+      });
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content?.trim() || "The advisor could not respond. Please try again.";
+      setMessages(prev => [...prev, { role: 'ai', text: reply }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'ai', text: "Connection error. Please check your network and try again." }]);
+    }
   };
+
+  const send = () => { sendMessage(); };
 
   return (
     <>

@@ -546,6 +546,41 @@ Provide a brief 1-2 sentence explanation of what this decision implies: the stra
   }
 });
 
+/**
+ * AI Policy Advisor – accepts message, metrics, turn; returns reply via Groq.
+ */
+app.post('/api/advisor', async (req, res) => {
+  try {
+    const { message, metrics = {}, turn = 1 } = req.body;
+    if (!message || typeof message !== 'string')
+      return res.status(400).json({ error: "Missing message" });
+
+    const metricsStr = JSON.stringify(metrics);
+    const prompt = `You are an AI Policy Advisor for a governance simulation. The user is on turn ${turn}/10.
+
+Current metrics: ${metricsStr}
+
+User question: ${message}
+
+Give a concise, strategic reply. Focus on policy advice, trade-offs, and systemic effects. Keep it brief (2-4 sentences).`;
+
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      temperature: 0.6,
+      messages: [
+        { role: "system", content: "You are a concise AI Policy Advisor for a governance simulation." },
+        { role: "user", content: prompt }
+      ]
+    });
+
+    const reply = completion.choices?.[0]?.message?.content?.trim() || "I couldn't generate a response. Please try again.";
+    res.json({ reply });
+  } catch (err) {
+    console.error("❌ /api/advisor ERROR:", err);
+    res.status(500).json({ error: err.message, reply: "The advisor is temporarily unavailable. Please try again." });
+  }
+});
+
 /* ===============================
    SERVER START
 ================================*/
