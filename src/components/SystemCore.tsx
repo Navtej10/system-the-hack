@@ -95,7 +95,7 @@ export const SystemCore = React.memo<SystemCoreProps>(({
         clickBeamBoostRef.current = 1;
     }, []);
 
-    const { scene } = useGLTF('/src/assets/futuristic_cube.glb');
+    const { scene } = useGLTF('/models/futuristic_cube.glb');
 
     const model = useMemo(() => {
         const cloned = scene.clone();
